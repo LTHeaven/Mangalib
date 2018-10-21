@@ -1,6 +1,5 @@
 package es.heavensgat.mangalib.server.models;
 
-import es.heavensgat.mangalib.server.models.Chapter;
 
 import java.awt.*;
 import java.util.ArrayList;

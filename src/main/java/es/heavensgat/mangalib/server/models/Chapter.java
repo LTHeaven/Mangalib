@@ -6,6 +6,15 @@ public class Chapter {
     private String title;
     private String firstPageURL;
     private List<Page> pages;
+    private Manga manga;
+
+    public Manga getManga() {
+        return manga;
+    }
+
+    public void setManga(Manga manga) {
+        this.manga = manga;
+    }
 
     public String getTitle() {
         return title;

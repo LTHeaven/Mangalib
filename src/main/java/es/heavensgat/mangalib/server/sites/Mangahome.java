@@ -13,8 +13,10 @@ import org.jsoup.select.Elements;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,9 +53,9 @@ public class Mangahome implements SiteInterface {
         return "N/A";
     }
 
-    public List<Chapter> getChapters(String baseUrl) {
+    public List<Chapter> getChapters(Manga manga) {
         try{
-            Connection connection = Jsoup.connect(baseUrl);
+            Connection connection = Jsoup.connect(manga.getBaseURL());
             connection.userAgent("Chrome/69.0.3497.100");
 
             Document doc = connection.get();
@@ -65,6 +67,7 @@ public class Mangahome implements SiteInterface {
                 chapter.setTitle(li.select("span.mobile-none").first().text());
                 chapter.setFirstPageURL(li.select("a[href]").first().attr("href").replaceFirst("//www.", "http://"));
                 chapter.setPages(getPages(chapter));
+                chapter.setManga(manga);
                 chapters.add(chapter);
                 System.out.println(chapter.getTitle());
             }
@@ -96,19 +99,23 @@ public class Mangahome implements SiteInterface {
         return pages;
     }
 
-    public void downloadImages(Chapter emptyChapter) {
-        for(Page page : emptyChapter.getPages()) {
-            System.out.println("downloading: " + emptyChapter.getTitle() + " - " + page.getPageNumber());
-            try{
-                Connection connection = Jsoup.connect(page.getUrl());
-                connection.userAgent("Chrome/69.0.3497.100");
+    public BufferedImage getImage(Page page, String imagePath){
+        try{
+            Connection connection = Jsoup.connect(page.getUrl());
+            connection.userAgent("Chrome/69.0.3497.100");
 
-                Document doc = connection.get();
-                page.setImage(getImage(doc.select("img#image").first().attr("src")));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            Document doc = connection.get();
+            BufferedImage image = (BufferedImage)getImage(doc.select("img#image").first().attr("src"));
+            File outputFile = new File(imagePath);
+            outputFile.mkdirs();
+            ImageIO.write(image, "jpg", outputFile);
+            return image;
+        } catch(SocketTimeoutException se) {
+            System.out.println("Timeout!");
+        }catch(IOException ie) {
+            ie.printStackTrace();
         }
+        return null;
     }
 
     private Image getImage(String url) throws IOException{

@@ -2,26 +2,27 @@ package es.heavensgat.mangalib.server.util;
 
 import es.heavensgat.mangalib.server.models.Chapter;
 import es.heavensgat.mangalib.server.models.Manga;
+import es.heavensgat.mangalib.server.models.Page;
 
+import java.awt.image.BufferedImage;
 import java.util.List;
 
 public interface SiteInterface {
 
-    public Manga getBaseMangaInfo(String url);
+    Manga getBaseMangaInfo(String url);
 
     /**
      * Returns a List of Chapters
      *
      * returns List<Chapter>
-     * @param baseUrl
+     * @param manga
      */
-    public List<Chapter> getChapters(String baseUrl);
+    List<Chapter> getChapters(Manga manga);
 
     /**
      * Crawls through a chapter filling it with pages
      *
-     * @param emptyChapter
      * @return chapter containing all Pages
      */
-    public void downloadImages(Chapter emptyChapter);
+    BufferedImage getImage(Page page, String ImagePath);
 }

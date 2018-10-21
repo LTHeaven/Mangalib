@@ -11,17 +11,17 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import sun.awt.image.ByteArrayImageSource;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class MangaUtil {
     public static int MAX_CHAPTERS = 1;
+    public static String BASE_DIRECTORY = "C:/Users/bened_000/Pictures/Mangalib";
 
     public static Manga crawlCompleteManga(String url) {
         SiteInterface site;
@@ -32,14 +32,13 @@ public class MangaUtil {
         }
         Manga manga = site.getBaseMangaInfo(url);
         System.out.println(manga.toString());
-        System.out.println("Getting chapter info");
-        List<Chapter> chapters = site.getChapters(url);
+        System.out.println("--- Getting chapter info");
+        List<Chapter> chapters = site.getChapters(manga);
         manga.setChapters(chapters);
-        System.out.println("downloading images");
         for(Chapter chapter : chapters.subList(0, MAX_CHAPTERS)){
-            //site.downloadImages(chapter);
+            downloadImages(chapter, site);
         }
-        System.out.println("generating pdf");
+        System.out.println("--- Generating PDF");
         generatePDF(null, manga, true);
         return null;
     }
@@ -47,7 +46,8 @@ public class MangaUtil {
     private static void addImagePage(BufferedImage bimg, PDDocument document) throws IOException{
         if(bimg == null){
             System.out.println("replacing image");
-            bimg = ImageIO.read(MangaUtil.class.getResource("/resources/missing-page.jpg"));
+            BufferedImage read = ImageIO.read(MangaUtil.class.getResource("/images/missing-page.jpg"));
+            bimg = read;
         }
         float width = bimg.getWidth(null);
         float height = bimg.getHeight(null);
@@ -85,8 +85,8 @@ public class MangaUtil {
     }
 
     private static void addChapterCover(String mangaTitle, String chapterTitle, PDDocument document) throws IOException {
-        int marginTop = 30; // Or whatever margin you want.
-        String title = mangaTitle;// + "\n" + chapterTitle;
+        int marginTop = 350; // Or whatever margin you want.
+        String title = mangaTitle + " - " + chapterTitle;
         PDPage page = new PDPage();
         document.addPage(page);
         PDPageContentStream stream = new PDPageContentStream(document, page);
@@ -102,5 +102,22 @@ public class MangaUtil {
         stream.drawString(title);
         stream.endText();
         stream.close();
+    }
+
+
+    public static void downloadImages(Chapter emptyChapter, SiteInterface site) {
+        for(Page page : emptyChapter.getPages()) {
+            String path = MangaUtil.BASE_DIRECTORY + "/mangas/" + emptyChapter.getManga().getTitle() + "/" + emptyChapter.getTitle() + "/";
+            String imagePath = path + page.getPageNumber() + ".jpg";
+            imagePath = imagePath.replace(' ', '_');
+            try {
+                BufferedImage image = ImageIO.read(new File(imagePath));
+                System.out.println("Cached image found");
+                page.setImage(image);
+            } catch(Exception e){
+                System.out.println("downloading: " + emptyChapter.getTitle() + " - " + page.getPageNumber());
+                page.setImage(site.getImage(page, imagePath));
+            }
+        }
     }
 }
