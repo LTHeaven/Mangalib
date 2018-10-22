@@ -1,0 +1,2 @@
+compile exec:java -Dexec.mainClass=Main -Dexec.args=<mangaurl>
+compile exec:java -Dexec.mainClass=Main -Dexec.args=http://www.mangahome.com/manga/hinekure_chaser
