@@ -3,7 +3,6 @@ package es.heavensgat.mangalib.server.sites;
 import es.heavensgat.mangalib.server.models.Chapter;
 import es.heavensgat.mangalib.server.models.Manga;
 import es.heavensgat.mangalib.server.models.Page;
-import es.heavensgat.mangalib.server.util.MangaUtil;
 import es.heavensgat.mangalib.server.util.SiteInterface;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -53,7 +52,7 @@ public class Mangahome implements SiteInterface {
         return "N/A";
     }
 
-    public List<Chapter> getChapters(Manga manga) {
+    public List<Chapter> getChapters(Manga manga, int chapterAmount) {
         try{
             Connection connection = Jsoup.connect(manga.getBaseURL());
             connection.userAgent("Chrome/69.0.3497.100");
@@ -62,9 +61,9 @@ public class Mangahome implements SiteInterface {
             Elements chapterLis = doc.select(".detail-chlist > li");
             Collections.reverse(chapterLis);
             List<Chapter> chapters = new ArrayList<>();
-            for(Element li : chapterLis.subList(0, MangaUtil.MAX_CHAPTERS)){
+            for(Element li : chapterAmount == -1 ? chapterLis : chapterLis.subList(0, chapterAmount)){
                 Chapter chapter = new Chapter();
-                chapter.setTitle(li.select("span.mobile-none").first().text());
+                chapter.setTitle((chapterLis.indexOf(li)+1) + "-" + li.select("span.mobile-none").first().text());
                 chapter.setFirstPageURL(li.select("a[href]").first().attr("href").replaceFirst("//www.", "http://"));
                 chapter.setPages(getPages(chapter));
                 chapter.setManga(manga);
@@ -111,7 +110,6 @@ public class Mangahome implements SiteInterface {
             ImageIO.write(image, "jpg", outputFile);
             return image;
         } catch(SocketTimeoutException se) {
-            System.out.println("Timeout!");
         }catch(IOException ie) {
             ie.printStackTrace();
         }

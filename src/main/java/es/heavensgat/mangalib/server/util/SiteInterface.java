@@ -17,7 +17,7 @@ public interface SiteInterface {
      * returns List<Chapter>
      * @param manga
      */
-    List<Chapter> getChapters(Manga manga);
+    List<Chapter> getChapters(Manga manga, int chapterAmount);
 
     /**
      * Crawls through a chapter filling it with pages
