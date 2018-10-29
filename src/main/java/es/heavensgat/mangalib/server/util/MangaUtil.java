@@ -13,17 +13,28 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.net.URL;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MangaUtil {
     public static int MAX_CHAPTERS = -1;
-    public static String BASE_DIRECTORY = "C:/Users/bened_000/Pictures/Mangalib";
+    public static String BASE_DIRECTORY = "C:/Users/BBender/Pictures/Mangas";
 
     public static Manga crawlCompleteManga(String url) {
         return crawlUntilChapter(url, MAX_CHAPTERS);
@@ -44,13 +55,24 @@ public class MangaUtil {
         manga.setChapters(chapters);
 
         System.out.println("--- Getting Images");
+        ExecutorService executorService = Executors.newFixedThreadPool(50);
+        int max = 0;
+        AtomicInteger current = new AtomicInteger(0);
+        for(Chapter chapter : chapterAmount == -1 ? chapters : chapters.subList(0, chapterAmount)) {
+            max += chapter.getPages().size();
+        }
+        System.out.print("0/" + max);
         for(Chapter chapter : chapterAmount == -1 ? chapters : chapters.subList(0, chapterAmount)){
-            System.out.println("Chapter: " + chapter.getTitle());
-            System.out.print("0/" + chapter.getPages().size());
-            downloadImages(chapter, site);
+            downloadImages(chapter, site, executorService, max, current);
+        }
+        try {
+            executorService.shutdown();
+            executorService.awaitTermination(5, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
-        System.out.println("--- Generating PDF");
+        System.out.println("\n--- Generating PDF");
         generatePDF(manga, chapterAmount);
         return manga;
     }
@@ -142,7 +164,7 @@ public class MangaUtil {
     }
 
 
-    public static void downloadImages(Chapter emptyChapter, SiteInterface site) {
+    public static void downloadImages(Chapter emptyChapter, SiteInterface site, ExecutorService executorService, int max, AtomicInteger current) {
         for(Page page : emptyChapter.getPages()) {
             String path = MangaUtil.BASE_DIRECTORY + "/mangas/" + emptyChapter.getManga().getTitle() + "/" + emptyChapter.getTitle() + "/";
             String imagePath = path + page.getPageNumber() + ".jpg";
@@ -151,10 +173,45 @@ public class MangaUtil {
                 BufferedImage image = ImageIO.read(new File(imagePath));
                 page.setImage(image);
             } catch(Exception e){
-                page.setImage(site.getImage(page, imagePath));
+                String finalImagePath = imagePath;
+                executorService.submit(() -> {
+                    Image image = getImage(site, page, finalImagePath);
+                    for(int i = 0; i<300 && image == null; i++){
+                        System.out.println("download image failed, retrying...");
+                        try {
+                            Thread. sleep(1000);
+                        } catch (InterruptedException e1) {
+                            e1.printStackTrace();
+                        }
+                        image = getImage(site, page, finalImagePath);
+                    }
+                    page.setImage(image);
+                    System.out.print("\r" + current.incrementAndGet() + "/" + max);
+                });
             }
-            System.out.print("\r" + page.getPageNumber() + "/" + emptyChapter.getPages().size());
         }
-        System.out.print("\n");
+    }
+
+    public static Image getImage(SiteInterface site, Page page, String imagePath){
+        try{
+            Connection connection = Jsoup.connect(page.getUrl());
+            connection.userAgent("Chrome/69.0.3497.100");
+
+            Document doc = connection.get();
+            BufferedImage image = (BufferedImage)downloadImage(site.getImageUrl(page));
+            File outputFile = new File(imagePath);
+            outputFile.mkdirs();
+            ImageIO.write(image, "jpg", outputFile);
+            return image;
+        } catch(SocketTimeoutException se) {
+        }catch(IOException ie) {
+            ie.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public static Image downloadImage(String url) throws IOException{
+        return ImageIO.read(new URL(url));
     }
 }

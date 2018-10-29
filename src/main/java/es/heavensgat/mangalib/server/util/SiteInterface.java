@@ -24,5 +24,5 @@ public interface SiteInterface {
      *
      * @return chapter containing all Pages
      */
-    BufferedImage getImage(Page page, String ImagePath);
+    String getImageUrl(Page page);
 }
