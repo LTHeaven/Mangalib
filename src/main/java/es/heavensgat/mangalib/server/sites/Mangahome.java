@@ -3,6 +3,7 @@ package es.heavensgat.mangalib.server.sites;
 import es.heavensgat.mangalib.server.models.Chapter;
 import es.heavensgat.mangalib.server.models.Manga;
 import es.heavensgat.mangalib.server.models.Page;
+import es.heavensgat.mangalib.server.util.MangaUtil;
 import es.heavensgat.mangalib.server.util.SiteInterface;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -37,7 +38,7 @@ public class Mangahome implements SiteInterface {
             manga.setSummary(doc.select("div.manga-detailmiddle > p.mobile-none").first().text());
             manga.setAuthor(getPersonIfExists(authors));
             manga.setArtist(getPersonIfExists(artists));
-            manga.setCoverImage(getImage(doc.select("img.detail-cover").first().attr("src")));
+            manga.setCoverImage(MangaUtil.downloadImage(doc.select("img.detail-cover").first().attr("src")));
             return manga;
         } catch (IOException e) {
             e.printStackTrace();
@@ -98,25 +99,17 @@ public class Mangahome implements SiteInterface {
         return pages;
     }
 
-    public BufferedImage getImage(Page page, String imagePath){
+    public String getImageUrl(Page page){
         try{
             Connection connection = Jsoup.connect(page.getUrl());
             connection.userAgent("Chrome/69.0.3497.100");
 
             Document doc = connection.get();
-            BufferedImage image = (BufferedImage)getImage(doc.select("img#image").first().attr("src"));
-            File outputFile = new File(imagePath);
-            outputFile.mkdirs();
-            ImageIO.write(image, "jpg", outputFile);
-            return image;
-        } catch(SocketTimeoutException se) {
+            return doc.select("img#image").first().attr("src");
         }catch(IOException ie) {
             ie.printStackTrace();
         }
         return null;
     }
 
-    private Image getImage(String url) throws IOException{
-        return ImageIO.read(new URL(url));
-    }
 }
