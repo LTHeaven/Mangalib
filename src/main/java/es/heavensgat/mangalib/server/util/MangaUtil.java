@@ -3,6 +3,7 @@ package es.heavensgat.mangalib.server.util;
 import es.heavensgat.mangalib.server.models.Chapter;
 import es.heavensgat.mangalib.server.models.Manga;
 import es.heavensgat.mangalib.server.models.Page;
+import es.heavensgat.mangalib.server.sites.Mangahere;
 import es.heavensgat.mangalib.server.sites.Mangahome;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -23,10 +24,10 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +45,8 @@ public class MangaUtil {
         SiteInterface site;
         if (url.contains("mangahome")){
             site = new Mangahome();
+        }else if (url.contains("mangahere")){
+            site = new Mangahere();
         }else{
             throw new SiteNotSupportedException("Provided manga website is not supported");
         }
@@ -212,6 +215,12 @@ public class MangaUtil {
 
 
     public static Image downloadImage(String url) throws IOException{
-        return ImageIO.read(new URL(url));
+        final URL urlObj = new URL(url);
+        final HttpURLConnection connection = (HttpURLConnection) urlObj
+                .openConnection();
+        connection.setRequestProperty(
+                "User-Agent",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31");
+        return ImageIO.read(connection.getInputStream());
     }
 }
