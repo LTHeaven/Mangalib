@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+    <title>Title</title>
+</head>
+<body>
+    <form th:action="@{/mangas}" method="post" enctype="multipart/form-data">
+        <div>
+            Manga Url: <input name="mangaUrl"/>
+        </div>
+        <div>
+            <input type="submit" value="CrawlManga" name="Button" />
+        </div>
+    </form>
+    <ul>
+       <li th:each="manga : ${mangas}"><a th:href="${manga.getPdfPath()}" th:text="${manga.getMangaTitle()}"></a></li>
+    </ul>
+</body>
+</html>

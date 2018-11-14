@@ -1,11 +1,10 @@
 package es.heavensgat.mangalib.server.models;
 
-import java.awt.*;
-
 public class Page {
     private Chapter parentChapter;
     private int pageNumber;
-    private Image image;
+    private String imageFilePath;
+//    private Image image;
     private String url;
 
     public String getUrl() {
@@ -32,20 +31,28 @@ public class Page {
         this.pageNumber = pageNumber;
     }
 
-    public Image getImage() {
-        return image;
+    public String getImageFilePath() {
+        return imageFilePath;
     }
 
-    public void setImage(Image image) {
-        this.image = image;
+    public void setImageFilePath(String imageFilePath) {
+        this.imageFilePath = imageFilePath;
     }
+
+    //    public Image getImage() {
+//        return image;
+//    }
+//
+//    public void setImage(Image image) {
+//        this.image = image;
+//    }
 
     @Override
     public String toString() {
         return "Page{" +
                 "parentChapter=" + parentChapter.getTitle() +
                 ", pageNumber=" + pageNumber +
-                ", image=" + image +
+//                ", image=" + image +
                 ", url='" + url + '\'' +
                 '}';
     }
