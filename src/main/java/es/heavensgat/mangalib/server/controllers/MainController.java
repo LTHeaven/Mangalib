@@ -1,6 +1,7 @@
 package es.heavensgat.mangalib.server.controllers;
 
 import es.heavensgat.mangalib.server.models.MangaListing;
+import es.heavensgat.mangalib.server.models.MangaListingDTO;
 import es.heavensgat.mangalib.server.util.MangaUtil;
 import org.apache.pdfbox.io.IOUtils;
 import org.springframework.stereotype.Controller;
@@ -19,11 +20,11 @@ import java.util.List;
  */
 @Controller
 public class MainController {
-    @RequestMapping("/")
-    public String overview(Model model) {
-        model.addAttribute("mangas", getMangas());
-        return "overview";
-    }
+//    @RequestMapping("/")
+//    public String overview() {
+////        model.addAttribute("mangas", MangaUtil.getMangas());
+//        return "overview";
+//    }
 
     @RequestMapping(value = "/files")
     public void getFile(@RequestParam(value = "file_name") String fileName, HttpServletResponse response) {
@@ -37,25 +38,11 @@ public class MainController {
         }
     }
 
-    @RequestMapping(value="/mangas", method = RequestMethod.POST)
+    @RequestMapping(value="/manga", method = RequestMethod.POST)
     public String mangaAdd(@RequestParam String mangaUrl, Model model){
         MangaUtil.crawlCompleteManga(mangaUrl);
-        model.addAttribute("mangas", getMangas());
+        model.addAttribute("mangas", MangaUtil.getMangas());
         return "overview";
     }
 
-    private List<MangaListing> getMangas(){
-        List<MangaListing> ret = new ArrayList<>();
-        File root  = new File(MangaUtil.BASE_DIRECTORY + "/mangas/");
-        root.mkdirs();
-        for(File file : root.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.contains(".pdf");
-            }
-        })){
-            ret.add(new MangaListing(file.getName().replace(".pdf", ""), "files?file_name=" + file.getName()));
-        }
-        return ret;
-    }
 }

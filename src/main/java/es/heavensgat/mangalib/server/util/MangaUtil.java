@@ -3,9 +3,8 @@ package es.heavensgat.mangalib.server.util;
 import com.itextpdf.text.*;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.pdf.PdfWriter;
+import es.heavensgat.mangalib.server.models.*;
 import es.heavensgat.mangalib.server.models.Chapter;
-import es.heavensgat.mangalib.server.models.Manga;
-import es.heavensgat.mangalib.server.models.Page;
 import es.heavensgat.mangalib.server.sites.Mangahere;
 import es.heavensgat.mangalib.server.sites.Mangahome;
 import org.jsoup.Connection;
@@ -16,10 +15,7 @@ import javax.imageio.ImageIO;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -80,8 +76,8 @@ public class MangaUtil {
     }
 
 
-    private static void addImagePage(Page page, com.itextpdf.text.Document document) throws Exception {
-        com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(page.getImageFilePath());
+    private static void addImagePage(String imagePath, com.itextpdf.text.Document document) throws Exception {
+        com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(imagePath);
         document.setPageSize(img);
         document.newPage();
         img.setAbsolutePosition(0, 0);
@@ -110,7 +106,7 @@ public class MangaUtil {
             for (Chapter chapter : manga.getChapters()) {
                 addChapterCover(manga.getTitle(), chapter.getTitle(), document);
                 for (Page page : chapter.getPages()) {
-                    addImagePage(page, document);
+                    addImagePage(page.getImageFilePath(), document);
                 }
             }
         }catch(Exception e){
@@ -186,6 +182,22 @@ public class MangaUtil {
         InputStream inputStream = connection.getInputStream();
         BufferedImage bufferedImage = ImageIO.read(inputStream);
         return bufferedImage;
+    }
+
+
+    public static MangaListingDTO getMangas(){
+        MangaListingDTO ret = new MangaListingDTO();
+        File root  = new File(MangaUtil.BASE_DIRECTORY + "/mangas/");
+        root.mkdirs();
+        for(File file : root.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.contains(".pdf");
+            }
+        })){
+            ret.add(new MangaListing(file.getName().replace(".pdf", ""), "files?file_name=" + file.getName()));
+        }
+        return ret;
     }
 
     private static void log(String message) {
