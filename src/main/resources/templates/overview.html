@@ -14,7 +14,9 @@
         </div>
     </form>
     <ul>
-       <li th:each="manga : ${mangas}"><a th:href="${manga.getPdfPath()}" th:text="${manga.getMangaTitle()}"></a></li>
+       <li th:each="manga : ${mangas}" th:with="currentUrl=(${#httpServletRequest.requestURI + '?' + #strings.defaultString(#httpServletRequest.queryString, '')})">
+           <a th:href="@{'/'+${manga.getPdfPath()}}" th:text="${manga.getMangaTitle()}" ></a>
+       </li>
     </ul>
 </body>
 </html>
