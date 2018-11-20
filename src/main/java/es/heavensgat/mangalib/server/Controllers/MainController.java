@@ -25,7 +25,7 @@ public class MainController {
         return "overview";
     }
 
-    @RequestMapping(value = "/files", method = RequestMethod.GET)
+    @RequestMapping(value = "/files")
     public void getFile(@RequestParam(value = "file_name") String fileName, HttpServletResponse response) {
         try{
             InputStream is = new FileInputStream(MangaUtil.BASE_DIRECTORY + "/mangas/" + fileName);
@@ -54,7 +54,7 @@ public class MainController {
                 return name.contains(".pdf");
             }
         })){
-            ret.add(new MangaListing(file.getName().replace(".pdf", ""), "/files?file_name=" + file.getName()));
+            ret.add(new MangaListing(file.getName().replace(".pdf", ""), "files?file_name=" + file.getName()));
         }
         return ret;
     }

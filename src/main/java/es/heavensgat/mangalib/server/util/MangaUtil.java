@@ -57,7 +57,7 @@ public class MangaUtil {
         manga.setChapters(chapters);
 
         log("--- Getting Images");
-        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
         int max = 0;
         AtomicInteger current = new AtomicInteger(0);
         for(Chapter chapter : chapterAmount == -1 ? chapters : chapters.subList(0, chapterAmount)) {
