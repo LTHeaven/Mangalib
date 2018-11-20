@@ -1,28 +1,23 @@
 package es.heavensgat.mangalib.server.util;
 
+import com.itextpdf.text.*;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.pdf.PdfWriter;
 import es.heavensgat.mangalib.server.models.Chapter;
 import es.heavensgat.mangalib.server.models.Manga;
 import es.heavensgat.mangalib.server.models.Page;
 import es.heavensgat.mangalib.server.sites.Mangahere;
 import es.heavensgat.mangalib.server.sites.Mangahome;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
-import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+
+import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -84,92 +79,46 @@ public class MangaUtil {
         return manga;
     }
 
-    private static void addImagePage(BufferedImage bimg, PDDocument document) throws IOException{
-        if(bimg == null){
-            log("replacing image");
-            BufferedImage read = ImageIO.read(MangaUtil.class.getResource("/images/missing-page.jpg"));
-            bimg = read;
-        }
-        float width = bimg.getWidth(null);
-        float height = bimg.getHeight(null);
-        PDPage pdfPage = new PDPage(new PDRectangle(width, height));
-        document.addPage(pdfPage);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ImageIO.write(bimg, "jpg", byteArrayOutputStream);
-        PDImageXObject img = PDImageXObject.createFromByteArray(document, byteArrayOutputStream.toByteArray(),"test");
-        PDPageContentStream contentStream = new PDPageContentStream(document, pdfPage);
-        contentStream.drawImage(img, 0, 0);
-        contentStream.close();
-        byteArrayOutputStream.close();
+
+    private static void addImagePage(Page page, com.itextpdf.text.Document document) throws Exception {
+        com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(page.getImageFilePath());
+        document.setPageSize(img);
+        document.newPage();
+        img.setAbsolutePosition(0, 0);
+        document.add(img);
+    }
+
+    private static void addChapterCover(String mangaTitle, String chapterTitle, com.itextpdf.text.Document document) throws DocumentException {
+        Font chapterFont = FontFactory.getFont(FontFactory.HELVETICA, 16, Font.BOLDITALIC);
+        Font paragraphFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Font.NORMAL);
+        Chunk chunk = new Chunk(chapterTitle, chapterFont);
+        Paragraph paragraphManga = new Paragraph(mangaTitle, paragraphFont);
+        Paragraph paragraphChapter = new Paragraph(chunk);
+        paragraphChapter.setAlignment(Element.ALIGN_CENTER);
+        paragraphManga.setAlignment(Element.ALIGN_CENTER);
+        com.itextpdf.text.Chapter chapter = new com.itextpdf.text.Chapter(paragraphChapter, 1);
+        chapter.setNumberDepth(0);
+        chapter.add(paragraphManga);
+        document.add(chapter);
     }
 
     private static void generatePDF(Manga manga, int chapterAmount) {
-        try{
-            String path = MangaUtil.BASE_DIRECTORY + "/mangas/" + manga.getTitle() + "/";
-            path = path.replace(' ', '_');
-            if(chapterAmount == -1){
-                PDDocument document = new PDDocument();
-                PDDocumentOutline outline = new PDDocumentOutline();
-                document.getDocumentCatalog().setDocumentOutline( outline );
-                PDOutlineItem root = new PDOutlineItem();
-                root.setTitle(manga.getTitle());
-                outline.addLast(root);
-
-                addImagePage((BufferedImage) manga.getCoverImage(), document);
-                for(Chapter chapter : manga.getChapters()){
-                    addChapterCover(manga.getTitle(), chapter.getTitle(), document, root);
-                    for(Page page : chapter.getPages()){
-                        addImagePage(ImageIO.read(new File(page.getImageFilePath())), document);
-                    }
+        com.itextpdf.text.Document document = new com.itextpdf.text.Document();
+        try {
+            PdfWriter.getInstance(document, new FileOutputStream(MangaUtil.BASE_DIRECTORY + "/mangas/" + manga.getTitle() + "-complete.pdf"));
+            document.open();
+            for (Chapter chapter : manga.getChapters()) {
+                addChapterCover(manga.getTitle(), chapter.getTitle(), document);
+                for (Page page : chapter.getPages()) {
+                    addImagePage(page, document);
                 }
-
-                path += manga.getTitle() + "-complete.pdf";
-                document.save(path);
-                document.save(MangaUtil.BASE_DIRECTORY + "/mangas/" + manga.getTitle() + "-complete.pdf");
-                document.close();
-            }else{
-                for(Chapter chapter : manga.getChapters()){
-                    PDDocument document = new PDDocument();
-                    addChapterCover(manga.getTitle(), chapter.getTitle(), document, null);
-                    for(Page page : chapter.getPages()){
-                        addImagePage(ImageIO.read(new File(page.getImageFilePath())), document);
-                    }
-                    String chapterPath = path + chapter.getTitle().replace(' ', '_') + ".pdf";
-                    document.save(chapterPath);
-                    document.save(MangaUtil.BASE_DIRECTORY + "/mangas/" + chapter.getTitle().replace(' ', '_') + ".pdf");
-                    document.close();
-                }
-
             }
-        }catch(IOException e){
+        }catch(Exception e){
             e.printStackTrace();
+        }finally{
+            document.close();
+            log("--- DONE");
         }
-    }
-
-    private static void addChapterCover(String mangaTitle, String chapterTitle, PDDocument document, PDOutlineItem root) throws IOException {
-        int marginTop = 350; // Or whatever margin you want.
-        String title = mangaTitle + " - " + chapterTitle;
-        PDPage page = new PDPage();
-        document.addPage(page);
-        if(root != null){
-            PDOutlineItem firstPageItem = new PDOutlineItem();
-            firstPageItem.setTitle( chapterTitle );
-            firstPageItem.setDestination(page);
-            root.addLast( firstPageItem );
-        }
-        PDPageContentStream stream = new PDPageContentStream(document, page);
-        PDFont font = PDType1Font.HELVETICA_BOLD; // Or whatever font you want.
-
-        int fontSize = 16; // Or whatever font size you want.
-        float titleWidth = font.getStringWidth(title) / 1000 * fontSize;
-        float titleHeight = font.getFontDescriptor().getFontBoundingBox().getHeight() / 1000 * fontSize;
-
-        stream.beginText();
-        stream.setFont(font, fontSize);
-        stream.moveTextPositionByAmount((page.getMediaBox().getWidth() - titleWidth) / 2, page.getMediaBox().getHeight() - marginTop - titleHeight);
-        stream.drawString(title);
-        stream.endText();
-        stream.close();
     }
 
 
@@ -180,12 +129,11 @@ public class MangaUtil {
             imagePath = imagePath.replace(' ', '_');
             try {
                 BufferedImage image = ImageIO.read(new File(imagePath));
-//                page.setImage(image);
+                page.setImageFilePath(imagePath);
                 System.out.print("\r" + current.incrementAndGet() + "/" + max);
             } catch(Exception e){
                 String finalImagePath = imagePath;
-//                executorService.submit(() -> {
-                    log("thread submitted");
+                executorService.submit(() -> {
                     Image image = getImage(site, page, finalImagePath);
                     for(int i = 0; i<300 && image == null; i++){
                         log("download image failed, retrying...");
@@ -196,10 +144,9 @@ public class MangaUtil {
                         }
                         image = getImage(site, page, finalImagePath);
                     }
-//                    page.setImage(image);
                     page.setImageFilePath(finalImagePath);
                     System.out.print("\r" + current.incrementAndGet() + "/" + max);
-//                });
+                });
             }
         }
     }
@@ -210,9 +157,7 @@ public class MangaUtil {
             connection.userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31");
 
             Document doc = connection.get();
-            log("before download");
             BufferedImage image = (BufferedImage)downloadImage(site.getImageUrl(page));
-            log("after download");
             File outputFile = new File(imagePath);
             outputFile.mkdirs();
             ImageIO.write(image, "jpg", outputFile);
@@ -233,18 +178,13 @@ public class MangaUtil {
 
     public static Image downloadImage(String url) throws IOException{
         final URL urlObj = new URL(url);
-        log("download connection open before");
         final HttpURLConnection connection = (HttpURLConnection) urlObj
                 .openConnection();
-        log("download connection open after");
         connection.setRequestProperty(
                 "User-Agent",
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31");
-        log("before inputStream");
         InputStream inputStream = connection.getInputStream();
-        log("before read");
         BufferedImage bufferedImage = ImageIO.read(inputStream);
-        log("after read\n\n");
         return bufferedImage;
     }
 

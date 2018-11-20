@@ -47,6 +47,7 @@ public class MainController {
     private List<MangaListing> getMangas(){
         List<MangaListing> ret = new ArrayList<>();
         File root  = new File(MangaUtil.BASE_DIRECTORY + "/mangas/");
+        root.mkdirs();
         for(File file : root.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
