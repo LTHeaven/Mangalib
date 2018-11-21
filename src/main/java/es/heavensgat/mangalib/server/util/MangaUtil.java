@@ -78,6 +78,10 @@ public class MangaUtil {
 
     private static void addImagePage(String imagePath, com.itextpdf.text.Document document) throws Exception {
         com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(imagePath);
+        addImage(img, document);
+    }
+
+    private static void addImage(com.itextpdf.text.Image img, com.itextpdf.text.Document document) throws Exception {
         document.setPageSize(img);
         document.newPage();
         img.setAbsolutePosition(0, 0);
@@ -103,6 +107,7 @@ public class MangaUtil {
         try {
             PdfWriter.getInstance(document, new FileOutputStream(MangaUtil.BASE_DIRECTORY + "/mangas/" + manga.getTitle() + "-complete.pdf"));
             document.open();
+            addImagePage(manga.getCoverImage(), document);
             for (Chapter chapter : manga.getChapters()) {
                 addChapterCover(manga.getTitle(), chapter.getTitle(), document);
                 for (Page page : chapter.getPages()) {
@@ -195,7 +200,7 @@ public class MangaUtil {
                 return name.contains(".pdf");
             }
         })){
-            ret.add(new MangaListing(file.getName().replace(".pdf", ""), "files?file_name=" + file.getName()));
+            ret.add(new MangaListing(file.getName().replace("-complete.pdf", ""), "files?file_name=" + file.getName()));
         }
         return ret;
     }

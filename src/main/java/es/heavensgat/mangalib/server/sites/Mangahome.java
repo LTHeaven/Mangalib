@@ -12,12 +12,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +35,13 @@ public class Mangahome implements SiteInterface {
             manga.setSummary(doc.select("div.manga-detailmiddle > p.mobile-none").first().text());
             manga.setAuthor(getPersonIfExists(authors));
             manga.setArtist(getPersonIfExists(artists));
-            manga.setCoverImage(MangaUtil.downloadImage(doc.select("img.detail-cover").first().attr("src")));
+
+            String coverPath = MangaUtil.BASE_DIRECTORY + "/mangas/" + manga.getTitle() + "/cover.jpg";
+            coverPath = coverPath.replace(' ', '_');
+            File outputFile = new File(coverPath);
+            outputFile.mkdirs();
+            ImageIO.write((BufferedImage) MangaUtil.downloadImage(doc.select("img.detail-cover").first().attr("src")), "jpg", outputFile);
+            manga.setCoverImage(coverPath);
             return manga;
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,35 +1,40 @@
-<!--<!DOCTYPE html>-->
-<!--<html xmlns:th="http://www.thymeleaf.org">-->
-<!--<head>-->
-    <!--<meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />-->
-    <!--<title>Title</title>-->
-<!--</head>-->
-<!--<body>-->
-    <!--<form th:action="@{/manga}" method="post" enctype="multipart/form-data">-->
-        <!--<div>-->
-            <!--Manga Url: <input name="mangaUrl"/>-->
-        <!--</div>-->
-        <!--<div>-->
-            <!--<input type="submit" value="CrawlManga" name="Button" />-->
-        <!--</div>-->
-    <!--</form>-->
-    <!--<ul>-->
-       <!--<li th:each="manga : ${mangas.getItems()}" th:with="currentUrl=(${#httpServletRequest.requestURI + '?' + #strings.defaultString(#httpServletRequest.queryString, '')})">-->
-           <!--<a th:href="@{'/'+${manga.getPdfPath()}}" th:text="${manga.getMangaTitle()}" ></a>-->
-       <!--</li>-->
-    <!--</ul>-->
-<!--</body>-->
-<!--</html>-->
 <!doctype html>
-<html ng-app="overview">
+<html class="no-js" lang="en" dir="ltr" ng-app="overview">
 <head>
-    <title>Hello AngularJS</title>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mangalib</title>
+    <link rel="stylesheet" href="css/foundation.css">
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="icon" href="img/favicon.png">
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.3/angular.min.js"></script>
     <script src="js/overview.js"></script>
 </head>
-
 <body>
-<div ng-controller="list">
-    <p>The ID is {{greeting}}</p>
-    <p>The content is {{greeting}}</p>
+<div class="grid-container" ng-controller="main">
+    <form style="margin-top: 100px">
+        <div class="grid-x grid-padding-x input-group">
+            <input class="input-group-field" type="text" ng-model="input.url" placeholder="Manga URL">
+            <div class="input-group-button">
+                <input type="submit" class="button" ng-click="post(input)" value="Crawl">
+            </div>
+        </div>
+    </form>
+
+    <div class="grid-x grid-padding-x grid-margin-x">
+        <a class="cell large-12 button" ng-click="refresh()">Refresh</a>
+        <a class="cell large-3 small-12 shrink card" ng-repeat="manga in data.items" ng-href="{{manga.pdfPath}}" target="_blank">
+            <div class="card-section">
+                {{manga.mangaTitle}}
+            </div>
+        </a>
+    </div>
 </div>
+
+<script src="js/vendor/jquery.js"></script>
+<script src="js/vendor/what-input.js"></script>
+<script src="js/vendor/foundation.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

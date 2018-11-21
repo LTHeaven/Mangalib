@@ -1,7 +1,6 @@
 package es.heavensgat.mangalib.server.models;
 
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,13 +11,13 @@ public class Manga {
     private String artist;
     private String summary;
     private String baseURL;
-    private Image coverImage;
+    private String coverImage;
 
-    public Image getCoverImage() {
+    public String getCoverImage() {
         return coverImage;
     }
 
-    public void setCoverImage(Image coverImage) {
+    public void setCoverImage(String coverImage) {
         this.coverImage = coverImage;
     }
 
