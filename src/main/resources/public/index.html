@@ -24,10 +24,17 @@
 
     <div class="grid-x grid-padding-x grid-margin-x">
         <a class="cell large-12 button" ng-click="refresh()">Refresh</a>
-        <a class="cell large-3 small-12 shrink card" ng-repeat="manga in data.items" ng-href="{{manga.pdfPath}}" target="_blank">
+        <a class="cell large-3 small-12 shrink card" ng-repeat="manga in data.items" ng-href="{{manga.status !== null ?'' :'files' + manga.pdfPath}}" target="_blank" ng-class="{'color-green': manga.status === null, 'color-orange': manga.status !==null}">
+            <div class="card-section">
+                <img ng-src="{{'cover' + manga.pdfPath}}" />
+            </div>
             <div class="card-section">
                 {{manga.mangaTitle}}
             </div>
+            <!--<div class="card-section">-->
+                <!--{{manga.summary}}-->
+            <!--</div>-->
+            <div class="card-section" ng-if="manga.status">{{manga.status}}</div>
         </a>
     </div>
 </div>

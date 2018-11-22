@@ -19,6 +19,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,12 +31,9 @@ public class MangaUtil {
     public static int MAX_CHAPTERS = -1;
 //    public static String BASE_DIRECTORY = "C:/Users/bened_000/Pictures/Mangalib";
     public static String BASE_DIRECTORY = "/opt/tomcat";
+    public static List<MangaListing> progressListings = new ArrayList<>();
 
     public static Manga crawlCompleteManga(String url) {
-        return crawlUntilChapter(url, MAX_CHAPTERS);
-    }
-
-    public static Manga crawlUntilChapter(String url, int chapterAmount){
         SiteInterface site;
         if (url.contains("mangahome")){
             site = new Mangahome();
@@ -47,21 +45,28 @@ public class MangaUtil {
 
         log("--- Getting base manga info");
         Manga manga = site.getBaseMangaInfo(url);
+        MangaListing listing = new MangaListing(manga.getTitle());
+        listing.setMangaSummary(manga.getSummary());
+        listing.setAdded(System.currentTimeMillis());
+        listing.setPdfPath("?file_name=" + manga.getTitle() + ".pdf");
+        progressListings.add(listing);
 
-        log("--- Getting chapter info");
-        List<Chapter> chapters = site.getChapters(manga, chapterAmount);
+        log("--- Getting chapter info", listing);
+        List<Chapter> chapters = site.getChapters(manga);
         manga.setChapters(chapters);
 
-        log("--- Getting Images");
+        log("--- Getting Images", listing);
         ExecutorService executorService = Executors.newFixedThreadPool(10);
         int max = 0;
         AtomicInteger current = new AtomicInteger(0);
-        for(Chapter chapter : chapterAmount == -1 ? chapters : chapters.subList(0, chapterAmount)) {
+        for(Chapter chapter : chapters) {
             max += chapter.getPages().size();
         }
-        System.out.print("0/" + max);
-        for(Chapter chapter : chapterAmount == -1 ? chapters : chapters.subList(0, chapterAmount)){
-            downloadImages(chapter, site, executorService, max, current);
+        String currentStatus = "0/" + max;
+        System.out.print(currentStatus);
+        listing.setStatus(currentStatus);
+        for(Chapter chapter : chapters){
+            downloadImages(chapter, site, executorService, max, current, listing);
         }
         try {
             executorService.shutdown();
@@ -70,14 +75,20 @@ public class MangaUtil {
             e.printStackTrace();
         }
 
-        log("\n--- Generating PDF");
-        generatePDF(manga, chapterAmount);
+        log("\n--- Generating PDF", listing);
+        generatePDF(manga);
+        progressListings.remove(listing);
         return manga;
     }
 
 
     private static void addImagePage(String imagePath, com.itextpdf.text.Document document) throws Exception {
-        com.itextpdf.text.Image img = com.itextpdf.text.Image.getInstance(imagePath);
+        com.itextpdf.text.Image img;
+        try{
+            img = com.itextpdf.text.Image.getInstance(imagePath);
+        }catch(FileNotFoundException e){
+            img = com.itextpdf.text.Image.getInstance(MangaUtil.class.getResource("/images/missing-page.jpg"));
+        }
         addImage(img, document);
     }
 
@@ -102,10 +113,10 @@ public class MangaUtil {
         document.add(chapter);
     }
 
-    private static void generatePDF(Manga manga, int chapterAmount) {
+    private static void generatePDF(Manga manga) {
         com.itextpdf.text.Document document = new com.itextpdf.text.Document();
         try {
-            PdfWriter.getInstance(document, new FileOutputStream(MangaUtil.BASE_DIRECTORY + "/mangas/" + manga.getTitle() + "-complete.pdf"));
+            PdfWriter.getInstance(document, new FileOutputStream(MangaUtil.BASE_DIRECTORY + "/mangas/"  + manga.getTitle().replace(" ", "_") + "/" + manga.getTitle() + ".pdf"));
             document.open();
             addImagePage(manga.getCoverImage(), document);
             for (Chapter chapter : manga.getChapters()) {
@@ -123,7 +134,7 @@ public class MangaUtil {
     }
 
 
-    public static void downloadImages(Chapter emptyChapter, SiteInterface site, ExecutorService executorService, int max, AtomicInteger current) {
+    public static void downloadImages(Chapter emptyChapter, SiteInterface site, ExecutorService executorService, int max, AtomicInteger current, MangaListing listing) {
         for(Page page : emptyChapter.getPages()) {
             String path = MangaUtil.BASE_DIRECTORY + "/mangas/" + emptyChapter.getManga().getTitle() + "/" + emptyChapter.getTitle() + "/";
             String imagePath = path + page.getPageNumber() + ".jpg";
@@ -131,12 +142,14 @@ public class MangaUtil {
             try {
                 BufferedImage image = ImageIO.read(new File(imagePath));
                 page.setImageFilePath(imagePath);
-                System.out.print("\r" + current.incrementAndGet() + "/" + max);
+                String currentStatus = "\r--- Getting Images " + current.incrementAndGet() + "/" + max;
+                System.out.print(currentStatus);
+                listing.setStatus(currentStatus);
             } catch(Exception e){
                 String finalImagePath = imagePath;
                 executorService.submit(() -> {
                     Image image = getImage(site, page, finalImagePath);
-                    for(int i = 0; i<300 && image == null; i++){
+                    for(int i = 0; i<3 && image == null; i++){
                         log("download image failed, retrying...");
                         try {
                             Thread. sleep(1000);
@@ -146,7 +159,9 @@ public class MangaUtil {
                         image = getImage(site, page, finalImagePath);
                     }
                     page.setImageFilePath(finalImagePath);
-                    System.out.print("\r" + current.incrementAndGet() + "/" + max);
+                    String currentStatus = "\r--- Getting Images " + current.incrementAndGet() + "/" + max;
+                    System.out.print(currentStatus);
+                    listing.setStatus(currentStatus);
                 });
             }
         }
@@ -194,15 +209,35 @@ public class MangaUtil {
         MangaListingDTO ret = new MangaListingDTO();
         File root  = new File(MangaUtil.BASE_DIRECTORY + "/mangas/");
         root.mkdirs();
-        for(File file : root.listFiles(new FilenameFilter() {
+        File[] dirs = root.listFiles(new FilenameFilter() {
             @Override
-            public boolean accept(File dir, String name) {
-                return name.contains(".pdf");
+            public boolean accept(File current, String name) {
+                return new File(current, name).isDirectory();
             }
-        })){
-            ret.add(new MangaListing(file.getName().replace("-complete.pdf", ""), "files?file_name=" + file.getName()));
+        });
+        for(File currentDir : dirs) {
+            File[] pdf = currentDir.listFiles(new FilenameFilter() {
+                @Override
+                public boolean accept(File dir, String name) {
+                    return name.contains(".pdf");
+                }
+            });
+            for(File file : pdf){
+                MangaListing mangaListing = new MangaListing(file.getName().replace(".pdf", ""), "?file_name=" + file.getName());
+                mangaListing.setAdded(file.lastModified());
+                ret.add(mangaListing);
+            }
         }
+        ret.add(progressListings);
+        ret.order();
         return ret;
+    }
+
+    private static void log(String message, MangaListing listing) {
+        if(listing != null) {
+            listing.setStatus(message);
+        }
+        log(message);
     }
 
     private static void log(String message) {

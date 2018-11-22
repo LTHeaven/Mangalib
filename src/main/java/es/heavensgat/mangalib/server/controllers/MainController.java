@@ -19,9 +19,21 @@ public class MainController {
     @RequestMapping(value = "/files")
     public void getFile(@RequestParam(value = "file_name") String fileName, HttpServletResponse response) {
         try{
-            InputStream is = new FileInputStream(MangaUtil.BASE_DIRECTORY + "/mangas/" + fileName);
+            InputStream is = new FileInputStream(MangaUtil.BASE_DIRECTORY + "/mangas/" + fileName.replace(" ", "_").replace(".pdf", "") + "/" + fileName);
             response.setContentType("application/pdf");
             response.setHeader("Content-disposition", "attachment;filename=" + fileName);
+            IOUtils.copy(is, response.getOutputStream());
+            response.flushBuffer();
+        } catch (IOException ex) {
+            System.out.println("error reading file");
+        }
+    }
+
+    @RequestMapping(value = "/cover")
+    public void getCover(@RequestParam(value = "file_name") String fileName, HttpServletResponse response) {
+        try{
+            InputStream is = new FileInputStream(MangaUtil.BASE_DIRECTORY + "/mangas/" + fileName.replace(" ", "_").replace(".pdf", "") + "/" + "cover.jpg");
+//            response.setContentType("application/jpg");
             IOUtils.copy(is, response.getOutputStream());
             response.flushBuffer();
         } catch (IOException ex) {

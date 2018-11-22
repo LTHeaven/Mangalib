@@ -1,6 +1,7 @@
 package es.heavensgat.mangalib.server.models;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MangaListingDTO {
@@ -16,5 +17,15 @@ public class MangaListingDTO {
 
     public void add(MangaListing mangaListing) {
         items.add(mangaListing);
+    }
+
+    public void add(List<MangaListing> listings){
+        for(MangaListing listing : listings){
+            items.add(listing);
+        }
+    }
+
+    public void order() {
+        Collections.sort(items);
     }
 }

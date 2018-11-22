@@ -4,7 +4,6 @@ import es.heavensgat.mangalib.server.models.Chapter;
 import es.heavensgat.mangalib.server.models.Manga;
 import es.heavensgat.mangalib.server.models.Page;
 
-import java.awt.image.BufferedImage;
 import java.util.List;
 
 public interface SiteInterface {
@@ -17,7 +16,7 @@ public interface SiteInterface {
      * returns List<Chapter>
      * @param manga
      */
-    List<Chapter> getChapters(Manga manga, int chapterAmount);
+    List<Chapter> getChapters(Manga manga);
 
     /**
      * Crawls through a chapter filling it with pages

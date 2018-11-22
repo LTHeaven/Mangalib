@@ -56,7 +56,7 @@ public class Mangahome implements SiteInterface {
         return "N/A";
     }
 
-    public List<Chapter> getChapters(Manga manga, int chapterAmount) {
+    public List<Chapter> getChapters(Manga manga) {
         try{
             Connection connection = Jsoup.connect(manga.getBaseURL());
             connection.userAgent("Chrome/69.0.3497.100");
@@ -65,7 +65,7 @@ public class Mangahome implements SiteInterface {
             Elements chapterLis = doc.select(".detail-chlist > li");
             Collections.reverse(chapterLis);
             List<Chapter> chapters = new ArrayList<>();
-            for(Element li : chapterAmount == -1 ? chapterLis : chapterLis.subList(0, chapterAmount)){
+            for(Element li : chapterLis){
                 Chapter chapter = new Chapter();
                 chapter.setTitle((chapterLis.indexOf(li)+1) + "-" + li.select("span.mobile-none").first().text());
                 chapter.setFirstPageURL(li.select("a[href]").first().attr("href").replaceFirst("//www.", "http://"));

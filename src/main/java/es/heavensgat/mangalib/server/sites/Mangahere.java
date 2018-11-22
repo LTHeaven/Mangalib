@@ -56,7 +56,7 @@ public class Mangahere implements SiteInterface {
         return "N/A";
     }
 
-    public List<Chapter> getChapters(Manga manga, int chapterAmount) {
+    public List<Chapter> getChapters(Manga manga) {
         try{
             Connection connection = Jsoup.connect(manga.getBaseURL());
             connection.userAgent("Chrome/69.0.3497.100");
@@ -65,7 +65,7 @@ public class Mangahere implements SiteInterface {
             Elements chapterSpans = doc.select("div.detail_list > ul > li > span.left");
             Collections.reverse(chapterSpans);
             List<Chapter> chapters = new ArrayList<>();
-            for(Element span : chapterAmount == -1 ? chapterSpans : chapterSpans.subList(0, chapterAmount)){
+            for(Element span : chapterSpans){
                 Chapter chapter = new Chapter();
                 chapter.setTitle((chapterSpans.indexOf(span)+1) + "-" + span.select("a").first().text());
                 chapter.setFirstPageURL(span.select("a[href]").first().attr("href").replaceFirst("//www.", "http://"));

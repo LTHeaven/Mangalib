@@ -1,3 +1,11 @@
-.card{
-    background-color: lightgreen;
+.color-green{
+    background-color: #6be09a;
+}
+
+.color-orange{
+    background-color: #e0b96b;
+}
+
+.color-red{
+    background-color: #e06b6b;
 }
