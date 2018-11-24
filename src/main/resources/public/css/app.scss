@@ -1,0 +1,50 @@
+$color-background: #33363A;
+$color-done:#21897E;
+$color-incomplete:#D4B483;
+$color-accent:#16B9BF;
+$color-error:#C1666B;
+
+body{
+  background-color: $color-background;
+}
+
+.color-done{
+  background-color: $color-done;
+}
+
+.color-incomplete{
+  background-color: $color-incomplete;
+}
+
+.color-error{
+  background-color: $color-error;
+}
+
+.preview-image{
+  height: 100%;
+  width: auto;
+}
+
+.image-container{
+  height: 100%;
+}
+
+.myCard{
+  height: 200px;
+  padding-left: 0 !important;
+  margin-top: 20px;
+}
+
+
+.metadata{
+  padding-top: 20px;
+  color: #000000;
+}
+
+.button{
+  background-color: $color-accent;
+  &:hover,
+  &:focus {
+    background-color: darken($color-accent, 5%);
+  }
+}

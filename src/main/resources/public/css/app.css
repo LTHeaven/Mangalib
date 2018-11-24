@@ -1,11 +1,44 @@
-.color-green{
-    background-color: #6be09a;
+body {
+  background-color: #33363A;
 }
 
-.color-orange{
-    background-color: #e0b96b;
+.color-done {
+  background-color: #21897E;
 }
 
-.color-red{
-    background-color: #e06b6b;
+.color-incomplete {
+  background-color: #D4B483;
 }
+
+.color-error {
+  background-color: #C1666B;
+}
+
+.preview-image {
+  height: 100%;
+  width: auto;
+}
+
+.image-container {
+  height: 100%;
+}
+
+.myCard {
+  height: 200px;
+  padding-left: 0 !important;
+  margin-top: 20px;
+}
+
+.metadata {
+  padding-top: 20px;
+  color: #000000;
+}
+
+.button {
+  background-color: #16B9BF;
+}
+.button:hover, .button:focus {
+  background-color: #13a3a8;
+}
+
+/*# sourceMappingURL=app.css.map */
