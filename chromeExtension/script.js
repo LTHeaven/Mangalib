@@ -4,7 +4,7 @@ var createButton = function (postUrl) {
     button.text = "Add to Mangalib";
     button.classList.add("btn-comments");
     button.onclick = function () {
-        $.post("http://localhost:8080/mangas", postUrl, function(data, status){
+        $.post("http://heavensgat.es:8080/mangalib/mangas", postUrl, function(data, status){
             console.log("after");
         });
     };

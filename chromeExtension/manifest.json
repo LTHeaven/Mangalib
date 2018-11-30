@@ -1,7 +1,7 @@
 {
-  "name": "MyExtension",
+  "name": "Mangalib injector",
   "version": "1.0",
-  "description": "Gotta catch Youtube events!",
+  "description": "testing123!",
   "permissions": ["tabs", "http://*/*"],
   "web_accessible_resources": [
     "script.js"
