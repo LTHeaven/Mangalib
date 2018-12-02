@@ -38,11 +38,11 @@
                     <div class="summary-dropdown" ng-class="{'color-done': manga.status === '', 'color-incomplete': manga.status !== '', 'hide': checkList(manga.added)}" id="{{'summary-dropdown-' + manga.added}}">
                         {{manga.summary}}
                     </div>
-                    <p ng-if="manga.status">{{manga.status}}</p>
-                    <div class="progress" role="progressbar" ng-if="manga.status">
-                        <span class="progress-meter" style="{{'width: ' + (manga.progress * 100) + '%;'}}">
-                            <p class="progress-meter-text">{{((manga.progress * 100) | number:2) + '%'}}</p>
+                    <div class="my-progress" ng-if="manga.status">
+                        <span class="my-progress-meter" style="{{'width: ' + (manga.progress * 100) + '%;'}}">
                         </span>
+                        <span class="my-progress-meter-text" ng-if="manga.status">{{manga.status}}</span>
+                        <span class="my-progress-meter-percentage">{{((manga.progress * 100) | number:2) + '%'}}</span>
                     </div>
                     <a ng-if="manga.status === ''" class="button button-card button-done" ng-href="{{manga.status !== '' ?'' :'files?file_name=' + getEncodedString(manga.title)}}">Download</a>
                 </div>
