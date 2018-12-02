@@ -41,4 +41,31 @@ body {
   background-color: #13a3a8;
 }
 
+.button-card {
+  width: 100%;
+}
+
+.summary-dropdown {
+  position: absolute;
+  width: 100%;
+  padding: 10px;
+  margin-top: 0;
+  z-index: 999;
+  transform: translateY(-1rem);
+}
+
+.button-done {
+  background-color: #2bb2a4;
+}
+.button-done:hover, .button-done:focus {
+  background-color: #269e91;
+}
+
+.button-incomplete {
+  background-color: #e1cba9;
+}
+.button-incomplete:hover, .button-incomplete:focus {
+  background-color: #dbbf96;
+}
+
 /*# sourceMappingURL=app.css.map */

@@ -48,3 +48,32 @@ body{
     background-color: darken($color-accent, 5%);
   }
 }
+
+.button-card{
+  width: 100%;
+}
+
+.summary-dropdown{
+  position: absolute;
+  width: 100%;
+  padding: 10px;
+  margin-top: 0;
+  z-index: 999;
+  transform: translateY(-1rem);
+}
+
+.button-done{
+  background-color: lighten($color-done, 10%);
+  &:hover,
+  &:focus {
+    background-color: lighten($color-done, 5%);
+  }
+}
+
+.button-incomplete{
+  background-color: lighten($color-incomplete, 10%);
+  &:hover,
+  &:focus {
+    background-color: lighten($color-incomplete, 5%);
+  }
+}
