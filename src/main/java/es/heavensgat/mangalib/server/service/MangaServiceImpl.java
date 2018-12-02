@@ -38,6 +38,7 @@ public class MangaServiceImpl implements MangaService{
     public static int MAX_CHAPTERS = -1;
 //    public static String BASE_DIRECTORY = "C:/Users/bened_000/Pictures/Mangalib";
     public static String BASE_DIRECTORY = "/opt/tomcat";
+    public static int CHAPTER_SPLIT_AMOUNT = 50;
     public static List<MangaListing> progressListings = new ArrayList<>();
 
     @Autowired
@@ -74,6 +75,7 @@ public class MangaServiceImpl implements MangaService{
         log("Getting chapter info", manga);
         List<Chapter> chapters = site.getChapters(manga);
         manga.setChapters(chapters);
+        manga.setChapterAmount(chapters.size());
 
         log("Getting Images", manga);
         ExecutorService executorService = Executors.newFixedThreadPool(10);
@@ -134,23 +136,45 @@ public class MangaServiceImpl implements MangaService{
     }
 
     private void generatePDF(Manga manga) {
-        com.itextpdf.text.Document document = new com.itextpdf.text.Document();
-        try {
-            PdfWriter.getInstance(document, new FileOutputStream(manga.getMangaFolderPath() + "/" +  URLEncoder.encode(manga.getTitle(), "UTF-8") + ".pdf"));
-            document.open();
-            addImagePage(manga.getMangaFolderPath() + "cover.jpg", document);
-            for (Chapter chapter : manga.getChapters()) {
-                addChapterCover(manga.getTitle(), chapter.getTitle(), document);
-                for (Page page : chapter.getPages()) {
-                    addImagePage(page.getImageFilePath(), document);
+        if(manga.getChapters().size()>CHAPTER_SPLIT_AMOUNT){
+            for (int i = 0; i*CHAPTER_SPLIT_AMOUNT < manga.getChapters().size(); i++){
+                com.itextpdf.text.Document document = new com.itextpdf.text.Document();
+                try {
+                    PdfWriter.getInstance(document, new FileOutputStream(manga.getMangaFolderPath() + "/" +  URLEncoder.encode(manga.getTitle(), "UTF-8") + "-" + (i+1) + ".pdf"));
+                    document.open();
+                    addImagePage(manga.getMangaFolderPath() + "/cover.jpg", document);
+                    int lastChapter = i * CHAPTER_SPLIT_AMOUNT + CHAPTER_SPLIT_AMOUNT;
+                    for (Chapter chapter : manga.getChapters().subList(i*CHAPTER_SPLIT_AMOUNT, lastChapter>manga.getChapters().size() ? manga.getChapters().size() : lastChapter)) {
+                        addChapterCover(manga.getTitle(), chapter.getTitle(), document);
+                        for (Page page : chapter.getPages()) {
+                            addImagePage(page.getImageFilePath(), document);
+                        }
+                    }
+                }catch(Exception e){
+                    e.printStackTrace();
+                }finally{
+                    document.close();
                 }
             }
-        }catch(Exception e){
-            e.printStackTrace();
-        }finally{
-            document.close();
-            log("--- DONE");
+        }else{
+            com.itextpdf.text.Document document = new com.itextpdf.text.Document();
+            try {
+                PdfWriter.getInstance(document, new FileOutputStream(manga.getMangaFolderPath() + "/" +  URLEncoder.encode(manga.getTitle(), "UTF-8") + ".pdf"));
+                document.open();
+                addImagePage(manga.getMangaFolderPath() + "/cover.jpg", document);
+                for (Chapter chapter : manga.getChapters()) {
+                    addChapterCover(manga.getTitle(), chapter.getTitle(), document);
+                    for (Page page : chapter.getPages()) {
+                        addImagePage(page.getImageFilePath(), document);
+                    }
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }finally{
+                document.close();
+            }
         }
+        log("--- DONE");
     }
 
 

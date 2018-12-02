@@ -44,7 +44,7 @@
                         <span class="my-progress-meter-text" ng-if="manga.status">{{manga.status}}</span>
                         <span class="my-progress-meter-percentage">{{((manga.progress * 100) | number:2) + '%'}}</span>
                     </div>
-                    <a ng-if="manga.status === ''" class="button button-card button-done" ng-href="{{manga.status !== '' ?'' :'files?file_name=' + getEncodedString(manga.title)}}">Download</a>
+                    <a ng-if="manga.status === '' && manga.chapterAmount <= 50" class="button button-card button-done" ng-href="{{manga.status !== '' ?'' :'files?file_name=' + getEncodedString(manga.title)}}">Download</a>
                 </div>
             </div>
         </div>

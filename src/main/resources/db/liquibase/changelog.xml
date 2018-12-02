@@ -24,4 +24,14 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="2" author="bbender">
+        <addColumn tableName="manga">
+            <column name="chapter_amount" type="INT"/>
+        </addColumn>
+        <update tableName="manga">
+            <column name="chapter_amount" value="1" />
+            <where>true</where>
+        </update>
+    </changeSet>
+
 </databaseChangeLog>

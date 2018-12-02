@@ -32,6 +32,16 @@ public class Manga implements Comparable{
     private double progress;
     @Column(name = "added")
     private long added;
+    @Column(name = "chapterAmount")
+    private int chapterAmount;
+
+    public int getChapterAmount() {
+        return chapterAmount;
+    }
+
+    public void setChapterAmount(int chapterAmount) {
+        this.chapterAmount = chapterAmount;
+    }
 
     public long getAdded() {
         return added;
