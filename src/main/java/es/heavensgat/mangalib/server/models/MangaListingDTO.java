@@ -5,22 +5,22 @@ import java.util.Collections;
 import java.util.List;
 
 public class MangaListingDTO {
-    private List<MangaListing> items = new ArrayList<>();
+    private List<Manga> items = new ArrayList<>();
 
-    public List<MangaListing> getItems() {
+    public List<Manga> getItems() {
         return items;
     }
 
-    public void setItems(List<MangaListing> items) {
+    public void setItems(List<Manga> items) {
         this.items = items;
     }
 
-    public void add(MangaListing mangaListing) {
-        items.add(mangaListing);
+    public void add(Manga Manga) {
+        items.add(Manga);
     }
 
-    public void add(List<MangaListing> listings){
-        for(MangaListing listing : listings){
+    public void add(List<Manga> listings){
+        for(Manga listing : listings){
             items.add(listing);
         }
     }

@@ -3,30 +3,37 @@ package es.heavensgat.mangalib.server.sites;
 import es.heavensgat.mangalib.server.models.Chapter;
 import es.heavensgat.mangalib.server.models.Manga;
 import es.heavensgat.mangalib.server.models.Page;
-import es.heavensgat.mangalib.server.util.MangaUtil;
+import es.heavensgat.mangalib.server.service.MangaService;
+import es.heavensgat.mangalib.server.service.MangaServiceImpl;
 import es.heavensgat.mangalib.server.util.SiteInterface;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Component
 public class Mangahere implements SiteInterface {
-    public Manga getBaseMangaInfo(String url) {
+    @Autowired
+    private MangaService mangaService;
+
+    public Manga getBaseMangaInfo(String url, Manga manga) {
         try {
             Connection connection = Jsoup.connect(url);
             connection.userAgent("Chrome/69.0.3497.100");
 
             Document doc = connection.get();
-            Manga manga = new Manga();
 
             manga.setBaseURL(url);
             manga.setTitle(doc.select("h1.title").first().text());
@@ -36,12 +43,11 @@ public class Mangahere implements SiteInterface {
             manga.setAuthor(getPersonIfExists(authors));
             manga.setArtist(getPersonIfExists(artists));
 
-            String coverPath = MangaUtil.BASE_DIRECTORY + "/mangas/" + manga.getTitle() + "/cover.jpg";
-            coverPath = coverPath.replace(' ', '_');
-            File outputFile = new File(coverPath);
+            String folderPath = MangaServiceImpl.BASE_DIRECTORY + "/mangas/" + URLEncoder.encode(manga.getTitle(), "UTF-8");
+            manga.setMangaFolderPath(folderPath);
+            File outputFile = new File(folderPath + "/cover.jpg");
             outputFile.mkdirs();
-            ImageIO.write((BufferedImage) MangaUtil.downloadImage(doc.select("div.manga_detail_top > img.img").first().attr("src")), "jpg", outputFile);
-            manga.setCoverImage(coverPath);
+            ImageIO.write((BufferedImage) mangaService.downloadImage(doc.select("div.manga_detail_top > img.img").first().attr("src")), "jpg", outputFile);
             return manga;
         } catch (IOException e) {
             e.printStackTrace();
@@ -65,7 +71,8 @@ public class Mangahere implements SiteInterface {
             Elements chapterSpans = doc.select("div.detail_list > ul > li > span.left");
             Collections.reverse(chapterSpans);
             List<Chapter> chapters = new ArrayList<>();
-            for(Element span : chapterSpans){
+            for(int i = 0; i < chapterSpans.size(); i++){
+                Element span = chapterSpans.get(i);
                 Chapter chapter = new Chapter();
                 chapter.setTitle((chapterSpans.indexOf(span)+1) + "-" + span.select("a").first().text());
                 chapter.setFirstPageURL(span.select("a[href]").first().attr("href").replaceFirst("//www.", "http://"));
@@ -73,6 +80,7 @@ public class Mangahere implements SiteInterface {
                 chapter.setManga(manga);
                 chapters.add(chapter);
                 System.out.println(chapter.getTitle());
+                mangaService.setProgress(manga, 1.*i/chapterSpans.size());
             }
             return chapters;
         } catch (IOException e) {

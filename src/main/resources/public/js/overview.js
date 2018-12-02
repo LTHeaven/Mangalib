@@ -8,7 +8,7 @@ angular.module('overview', [])
                 console.log($scope.data.items);
                 loop = false;
                 $scope.data.items.forEach(function(item){
-                   if(item.status !== null){
+                   if(item.status !== ''){
                        loop = true;
                    }
                 });
@@ -23,6 +23,10 @@ angular.module('overview', [])
             $scope.input = "";
             $timeout(function() { $scope.refresh();}, 2000);
         };
+
+        $scope.getEncodedString= function (string) {
+            return encodeURI(string);
+        }
 
         $scope.refresh();
     });
