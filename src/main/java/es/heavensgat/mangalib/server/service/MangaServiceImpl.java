@@ -39,7 +39,6 @@ public class MangaServiceImpl implements MangaService{
 //    public static String BASE_DIRECTORY = "C:/Users/bened_000/Pictures/Mangalib";
     public static String BASE_DIRECTORY = "/opt/tomcat";
     public static int CHAPTER_SPLIT_AMOUNT = 50;
-    public static List<MangaListing> progressListings = new ArrayList<>();
 
     @Autowired
     private MangaRepository mangaRepository;

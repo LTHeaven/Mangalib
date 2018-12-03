@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 /**
@@ -20,13 +19,13 @@ import java.net.URLEncoder;
 @Controller
 public class MainController {
     @RequestMapping(value = "/files")
-    public void getFile(@RequestParam(value = "file_name") String fileName, HttpServletResponse response) {
+    public void getFile(@RequestParam(value = "file_name") String fileName, @RequestParam(value = "index", required = false) Integer index, HttpServletResponse response) {
         try{
             String encodedName = URLEncoder.encode(fileName, "UTF-8");
-            File file = new File(MangaServiceImpl.BASE_DIRECTORY + "/mangas/" + encodedName + "/" + encodedName + ".pdf");
+            File file = new File(MangaServiceImpl.BASE_DIRECTORY + "/mangas/" + encodedName + "/" + encodedName + (index != null ? "-" + index : "") + ".pdf");
             InputStream is = new FileInputStream(file);
             response.setContentType("application/pdf");
-            response.setHeader("Content-disposition", "attachment;filename=" + fileName + ".pdf");
+            response.setHeader("Content-disposition", "attachment;filename=" + fileName + (index != null ? "-" + index : "") + ".pdf");
             response.addHeader("Content-Length", "" + file.length());
             IOUtils.copy(is, response.getOutputStream());
             response.flushBuffer();

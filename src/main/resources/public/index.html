@@ -31,11 +31,11 @@
                     <img class="preview-image" ng-src="{{'cover?file_name=' + getEncodedString(manga.title)}}" />
                 </div>
                 <div class="cell auto metadata" style="position: relative">
-                    <h3 style="word-break: break-all">
+                    <h3 class="manga-title">
                         {{manga.title}}
                     </h3>
                     <a class="button button-card" ng-class="{'button-done': manga.status === '', 'button-incomplete': manga.status !== ''}" ng-click="toggleSummary(manga.added)">Summary</a>
-                    <div class="summary-dropdown" ng-class="{'color-done': manga.status === '', 'color-incomplete': manga.status !== '', 'hide': checkList(manga.added)}" id="{{'summary-dropdown-' + manga.added}}">
+                    <div class="summary-dropdown" ng-class="{'color-done': manga.status === '', 'color-incomplete': manga.status !== '', 'hide': checkSummaryList(manga.added)}" id="{{'summary-dropdown-' + manga.added}}">
                         {{manga.summary}}
                     </div>
                     <div class="my-progress" ng-if="manga.status">
@@ -45,6 +45,10 @@
                         <span class="my-progress-meter-percentage">{{((manga.progress * 100) | number:2) + '%'}}</span>
                     </div>
                     <a ng-if="manga.status === '' && manga.chapterAmount <= 50" class="button button-card button-done" ng-href="{{manga.status !== '' ?'' :'files?file_name=' + getEncodedString(manga.title)}}">Download</a>
+                    <a ng-if="manga.status === '' && manga.chapterAmount > 50" class="button button-card button-done" ng-click="toggleDownload(manga.added)">Download</a>
+                    <div class="summary-dropdown color-done" ng-class="{'hide': checkDownloadList(manga.added)}" id="{{'download-dropdown-' + manga.added}}">
+                        <a class="button button-card button-done" ng-repeat="downButton in manga.downloadButtons" ng-href="{{downButton.href}}">{{downButton.text}}</a>
+                    </div>
                 </div>
             </div>
         </div>
