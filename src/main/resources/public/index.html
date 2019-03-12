@@ -25,27 +25,30 @@
 
     <div class="grid-x grid-padding-x grid-margin-x">
         <a class="cell large-12 button" ng-click="refresh()">Refresh</a>
-        <div class="cell large-6 small-12 shrink myCard" ng-repeat="manga in data.items" target="_blank" ng-class="{'color-done': manga.status === '', 'color-incomplete': manga.status !== ''}">
+        <div class="cell large-6 small-12 shrink myCard" ng-repeat="manga in data.items" target="_blank" ng-class="{'color-done': manga.status === '', 'color-incomplete': manga.status !== '' && !manga.error, 'color-error': manga.error}">
             <div class="grid-x image-container">
-                <div class="cell shrink" style="width: 150px;">
+                <div class="cell shrink" style="width: 150px; height: 100%;">
                     <img class="preview-image" ng-src="{{'cover?file_name=' + getEncodedString(manga.title)}}" />
                 </div>
                 <div class="cell auto metadata" style="position: relative">
-                    <h3 class="manga-title">
+                    <h5 class="manga-title">
                         {{manga.title}}
-                    </h3>
-                    <a class="button button-card" ng-class="{'button-done': manga.status === '', 'button-incomplete': manga.status !== ''}" ng-click="toggleSummary(manga.added)">Summary</a>
-                    <div class="summary-dropdown" ng-class="{'color-done': manga.status === '', 'color-incomplete': manga.status !== '', 'hide': checkSummaryList(manga.added)}" id="{{'summary-dropdown-' + manga.added}}">
+                    </h5>
+                    <a class="button button-card" ng-class="{'button-done': manga.status === '', 'button-incomplete': manga.status !== '' && !manga.error, 'button-error': manga.error}" ng-click="toggleSummary(manga.added)">Summary</a>
+                    <div class="summary-dropdown" ng-class="{'color-done': manga.status === '', 'color-incomplete': manga.status !== '' && !manga.error, 'color-error': manga.error, 'hide': checkSummaryList(manga.added)}" id="{{'summary-dropdown-' + manga.added}}">
                         {{manga.summary}}
                     </div>
-                    <div class="my-progress" ng-if="manga.status">
+                    <div class="error-message" ng-if="manga.error">
+                        <span class="my-progress-meter-text">{{manga.status}}</span>
+                    </div>
+                    <div class="my-progress" ng-if="manga.status && !manga.error">
                         <span class="my-progress-meter" style="{{'width: ' + (manga.progress * 100) + '%;'}}">
                         </span>
                         <span class="my-progress-meter-text" ng-if="manga.status">{{manga.status}}</span>
                         <span class="my-progress-meter-percentage">{{((manga.progress * 100) | number:2) + '%'}}</span>
                     </div>
-                    <a ng-if="manga.status === '' && manga.chapterAmount <= 50" class="button button-card button-done" ng-href="{{manga.status !== '' ?'' :'files?file_name=' + getEncodedString(manga.title)}}">Download</a>
-                    <a ng-if="manga.status === '' && manga.chapterAmount > 50" class="button button-card button-done" ng-click="toggleDownload(manga.added)">Download</a>
+                    <a ng-if="manga.status === '' && !manga.error && manga.chapterAmount <= 50" class="button button-card button-done" ng-href="{{manga.status !== '' ?'' :'files?file_name=' + getEncodedString(manga.title)}}">Download</a>
+                    <a ng-if="manga.status === '' && !manga.error && manga.chapterAmount > 50" class="button button-card button-done" ng-click="toggleDownload(manga.added)">Download</a>
                     <div class="summary-dropdown color-done" ng-class="{'hide': checkDownloadList(manga.added)}" id="{{'download-dropdown-' + manga.added}}">
                         <a class="button button-card button-done" ng-repeat="downButton in manga.downloadButtons" ng-href="{{downButton.href}}">{{downButton.text}}</a>
                     </div>

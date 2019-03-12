@@ -44,7 +44,7 @@ angular.module('overview', [])
                 console.log($scope.data.items);
                 loop = false;
                 $scope.data.items.forEach(function(item){
-                   if(item.status !== ''){
+                   if(item.status !== '' && !item.error){
                        loop = true;
                    }
                     $scope.getDownloadButtons(item);

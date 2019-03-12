@@ -78,6 +78,14 @@ body{
   }
 }
 
+.button-error {
+  background-color: lighten($color-error, 10%);
+  &:hover,
+  &:focus {
+    background-color: lighten($color-error, 5%);
+  }
+}
+
 .my-progress{
   background: none;
   border: 2px solid lighten($color-incomplete, 10%);
@@ -109,5 +117,13 @@ body{
 }
 
 .manga-title{
-  font-size: 1vw;
+  word-break: break-all;
+}
+
+.error-message{
+  background: none;
+  border: 2px solid lighten($color-error, 10%);
+  position: relative;
+  width: 100%;
+  height: 2rem;
 }

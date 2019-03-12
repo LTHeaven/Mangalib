@@ -34,6 +34,8 @@ public class Manga implements Comparable{
     private long added;
     @Column(name = "chapterAmount")
     private int chapterAmount;
+    @Column(name = "error")
+    private boolean error = false;
 
     public int getChapterAmount() {
         return chapterAmount;
@@ -41,6 +43,14 @@ public class Manga implements Comparable{
 
     public void setChapterAmount(int chapterAmount) {
         this.chapterAmount = chapterAmount;
+    }
+
+    public boolean isError() {
+        return error;
+    }
+
+    public void setError(boolean error) {
+        this.error = error;
     }
 
     public long getAdded() {

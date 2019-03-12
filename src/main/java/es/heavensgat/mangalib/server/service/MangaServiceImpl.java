@@ -8,6 +8,7 @@ import es.heavensgat.mangalib.server.models.Chapter;
 import es.heavensgat.mangalib.server.repository.MangaRepository;
 import es.heavensgat.mangalib.server.sites.Mangahere;
 import es.heavensgat.mangalib.server.sites.Mangahome;
+import es.heavensgat.mangalib.server.util.MangaException;
 import es.heavensgat.mangalib.server.util.SiteInterface;
 import es.heavensgat.mangalib.server.util.SiteNotSupportedException;
 import org.jsoup.Connection;
@@ -63,47 +64,53 @@ public class MangaServiceImpl implements MangaService{
         List<Manga> byBaseURL = mangaRepository.findByBaseURL(url);
         if (byBaseURL.size() > 0){
             manga = byBaseURL.get(0);
+            manga.setError(false);
         }else{
             manga = new Manga();
         }
-        manga.setAdded(System.currentTimeMillis());
-        manga.setProgress(0);
-        log("Getting base manga info", manga);
-        manga = site.getBaseMangaInfo(url, manga);
+        try{
+            manga.setAdded(System.currentTimeMillis());
+            manga.setProgress(0);
+            log("Getting base manga info", manga);
+            manga = site.getBaseMangaInfo(url, manga);
 
-        log("Getting chapter info", manga);
-        List<Chapter> chapters = site.getChapters(manga);
-        manga.setChapters(chapters);
-        manga.setChapterAmount(chapters.size());
+            log("Getting chapter info", manga);
+            List<Chapter> chapters = site.getChapters(manga);
+            manga.setChapters(chapters);
+            manga.setChapterAmount(chapters.size());
 
-        log("Getting Images", manga);
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
-        int max = 0;
-        AtomicInteger current = new AtomicInteger(0);
-        for(Chapter chapter : chapters) {
-            max += chapter.getPages().size();
-        }
-        String currentStatus = "0/" + max;
-        System.out.print(currentStatus);
-        for(Chapter chapter : chapters){
-            downloadImages(chapter, site, executorService, max, current, manga);
-        }
-        try {
-            executorService.shutdown();
-            executorService.awaitTermination(5, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+            log("Getting Images", manga);
+            ExecutorService executorService = Executors.newFixedThreadPool(10);
+            int max = 0;
+            AtomicInteger current = new AtomicInteger(0);
+            for(Chapter chapter : chapters) {
+                max += chapter.getPages().size();
+            }
+            String currentStatus = "0/" + max;
+            System.out.print(currentStatus);
+            for(Chapter chapter : chapters){
+                downloadImages(chapter, site, executorService, max, current, manga);
+            }
+            try {
+                executorService.shutdown();
+                executorService.awaitTermination(5, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-        log("\n");
-        log("Generating PDF", manga);
-        generatePDF(manga);
-        log("", manga);
+            log("\n");
+            log("Generating PDF", manga);
+            generatePDF(manga);
+            log("", manga);
+        }catch(MangaException e){
+            manga.setError(true);
+            log(e.getMessage(), manga);
+        }
         return manga;
     }
 
 
-    private void addImagePage(String imagePath, com.itextpdf.text.Document document) throws Exception {
+    private void addImagePage(String imagePath, com.itextpdf.text.Document document) throws IOException, DocumentException {
         com.itextpdf.text.Image img;
         try{
             img = com.itextpdf.text.Image.getInstance(imagePath);
@@ -113,7 +120,7 @@ public class MangaServiceImpl implements MangaService{
         addImage(img, document);
     }
 
-    private void addImage(com.itextpdf.text.Image img, com.itextpdf.text.Document document) throws Exception {
+    private void addImage(com.itextpdf.text.Image img, com.itextpdf.text.Document document) throws DocumentException {
         document.setPageSize(img);
         document.newPage();
         img.setAbsolutePosition(0, 0);
@@ -149,9 +156,15 @@ public class MangaServiceImpl implements MangaService{
                             addImagePage(page.getImageFilePath(), document);
                         }
                     }
-                }catch(Exception e){
-                    e.printStackTrace();
-                }finally{
+                } catch (UnsupportedEncodingException e) {
+                    throw new MangaException("Error generating PDF (Unsupported Encoding)");
+                } catch (FileNotFoundException e) {
+                    throw new MangaException("Error generating PDF (File Not Found)");
+                } catch (DocumentException e) {
+                    throw new MangaException("Error generating PDF (Document Error)");
+                } catch (IOException e) {
+                    throw new MangaException("Error generating PDF (IO Error)");
+                } finally{
                     document.close();
                 }
             }
@@ -167,9 +180,15 @@ public class MangaServiceImpl implements MangaService{
                         addImagePage(page.getImageFilePath(), document);
                     }
                 }
-            }catch(Exception e){
-                e.printStackTrace();
-            }finally{
+            } catch (UnsupportedEncodingException e) {
+                throw new MangaException("Error generating PDF (Unsupported Encoding)");
+            } catch (FileNotFoundException e) {
+                throw new MangaException("Error generating PDF (File Not Found)");
+            } catch (DocumentException e) {
+                throw new MangaException("Error generating PDF (Document Error)");
+            } catch (IOException e) {
+                throw new MangaException("Error generating PDF (IO Error)");
+            } finally{
                 document.close();
             }
         }
@@ -222,14 +241,11 @@ public class MangaServiceImpl implements MangaService{
             ImageIO.write(image, "jpg", outputFile);
             return image;
         } catch(SocketTimeoutException se) {
-            log("error1");
+            log("Socket Timeout getImage");
             se.printStackTrace();
         }catch(IOException ie) {
-            log("error2");
+            log("IO Exception getImage");
             ie.printStackTrace();
-        }catch(Exception e) {
-            log("error3");
-
         }
         return null;
     }

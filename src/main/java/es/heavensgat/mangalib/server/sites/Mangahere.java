@@ -5,6 +5,7 @@ import es.heavensgat.mangalib.server.models.Manga;
 import es.heavensgat.mangalib.server.models.Page;
 import es.heavensgat.mangalib.server.service.MangaService;
 import es.heavensgat.mangalib.server.service.MangaServiceImpl;
+import es.heavensgat.mangalib.server.util.MangaException;
 import es.heavensgat.mangalib.server.util.SiteInterface;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -36,10 +37,10 @@ public class Mangahere implements SiteInterface {
             Document doc = connection.get();
 
             manga.setBaseURL(url);
-            manga.setTitle(doc.select("h1.title").first().text());
+            manga.setTitle(doc.select("span.detail-info-right-title-font").first().text());
             Elements authors = doc.select("label + a[href*=/author/]");
             Elements artists = doc.select("label + a[href*=/artist/]");
-            manga.setSummary(doc.select("p#show").first().text());
+            manga.setSummary(doc.select("p.detail-info-right-content").first().text());
             manga.setAuthor(getPersonIfExists(authors));
             manga.setArtist(getPersonIfExists(artists));
 
@@ -47,12 +48,13 @@ public class Mangahere implements SiteInterface {
             manga.setMangaFolderPath(folderPath);
             File outputFile = new File(folderPath + "/cover.jpg");
             outputFile.mkdirs();
-            ImageIO.write((BufferedImage) mangaService.downloadImage(doc.select("div.manga_detail_top > img.img").first().attr("src")), "jpg", outputFile);
+            ImageIO.write((BufferedImage) mangaService.downloadImage(doc.select("img.detail-info-cover-img").first().attr("src")), "jpg", outputFile);
             return manga;
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new MangaException("Error getting base manga info");
+        } catch (NullPointerException e) {
+            throw new MangaException("Error getting base manga info");
         }
-        return null;
     }
 
     private String getPersonIfExists(Elements elements){
@@ -68,25 +70,29 @@ public class Mangahere implements SiteInterface {
             connection.userAgent("Chrome/69.0.3497.100");
 
             Document doc = connection.get();
-            Elements chapterSpans = doc.select("div.detail_list > ul > li > span.left");
-            Collections.reverse(chapterSpans);
+            Elements chapterAs = doc.select("div#list-1 > ul > li > a");
+            Collections.reverse(chapterAs);
             List<Chapter> chapters = new ArrayList<>();
-            for(int i = 0; i < chapterSpans.size(); i++){
-                Element span = chapterSpans.get(i);
+            for(int i = 0; i < chapterAs.size(); i++){
+                Element a = chapterAs.get(i);
                 Chapter chapter = new Chapter();
-                chapter.setTitle((chapterSpans.indexOf(span)+1) + "-" + span.select("a").first().text());
-                chapter.setFirstPageURL(span.select("a[href]").first().attr("href").replaceFirst("//www.", "http://"));
+                chapter.setTitle((chapterAs.indexOf(a)+1) + "-" + a.text());
+                chapter.setFirstPageURL("http://mangahere.cc" + a.attr("href"));
                 chapter.setPages(getPages(chapter));
                 chapter.setManga(manga);
                 chapters.add(chapter);
                 System.out.println(chapter.getTitle());
-                mangaService.setProgress(manga, 1.*i/chapterSpans.size());
+                mangaService.setProgress(manga, 1.*i/chapterAs.size());
+            }
+            if (chapters.size() <= 0){
+                throw new MangaException("No Chapters found");
             }
             return chapters;
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new MangaException("Error getting chapters - IO");
+        } catch (NullPointerException e) {
+            throw new MangaException("Error getting chapters - NP");
         }
-        return null;
     }
 
     private List<Page> getPages(Chapter chapter){
@@ -96,16 +102,20 @@ public class Mangahere implements SiteInterface {
             connection.userAgent("Chrome/69.0.3497.100");
 
             Document doc = connection.get();
-            Elements pageElements = doc.select("select.wid60").first().select("option:not(:contains(featured))");
-            for(Element currentPage : pageElements){
+            Elements controlButtons = doc.select("div.pager-list-left > span > a");
+            Element a = controlButtons.get(controlButtons.size()-2);
+            int pageCount = Integer.parseInt(a.text());
+            for (int i = 0; i < pageCount; i++){
                 Page page = new Page();
-                page.setPageNumber(pageElements.indexOf(currentPage) + 1);
-                page.setUrl(currentPage.attr("value").replace("//www.", "http://"));
+                page.setPageNumber(i + 1);
+                page.setUrl(chapter.getFirstPageURL().replace("1.html", (i+1)+".html"));
                 page.setParentChapter(chapter);
                 pages.add(page);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new MangaException("Error getting pages - IO");
+        } catch (NullPointerException e) {
+            throw new MangaException("Error getting pages - NP");
         }
         return pages;
     }
@@ -118,9 +128,8 @@ public class Mangahere implements SiteInterface {
             Document doc = connection.get();
             return doc.select("img#image").first().attr("src");
         }catch(IOException ie) {
-            ie.printStackTrace();
+            throw new MangaException("Error getting page image url");
         }
-        return null;
     }
 
 }

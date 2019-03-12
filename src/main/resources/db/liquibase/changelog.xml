@@ -34,4 +34,19 @@
         </update>
     </changeSet>
 
+    <changeSet id="3" author="bbender">
+        <addColumn tableName="manga">
+            <column name="error" type="BIT" valueBoolean="0"/>
+        </addColumn>
+        <sql>
+            update manga set error = 1 where status &lt;&gt; '' OR chapter_amount = 0;
+        </sql>
+    </changeSet>
+
+    <changeSet id="4" author="bbender">
+        <sql>
+            update manga set status = "legacy error" where error
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

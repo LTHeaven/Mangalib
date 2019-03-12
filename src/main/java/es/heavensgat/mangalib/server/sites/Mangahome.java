@@ -5,6 +5,7 @@ import es.heavensgat.mangalib.server.models.Manga;
 import es.heavensgat.mangalib.server.models.Page;
 import es.heavensgat.mangalib.server.service.MangaService;
 import es.heavensgat.mangalib.server.service.MangaServiceImpl;
+import es.heavensgat.mangalib.server.util.MangaException;
 import es.heavensgat.mangalib.server.util.SiteInterface;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -50,9 +51,10 @@ public class Mangahome implements SiteInterface {
             ImageIO.write((BufferedImage) mangaService.downloadImage(doc.select("img.detail-cover").first().attr("src")), "jpg", outputFile);
             return manga;
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new MangaException("Error getting base manga info");
+        } catch (NullPointerException e) {
+            throw new MangaException("Error getting base manga info");
         }
-        return null;
     }
 
     private String getPersonIfExists(Elements elements){
@@ -82,11 +84,15 @@ public class Mangahome implements SiteInterface {
                 System.out.println(chapter.getTitle());
                 mangaService.setProgress(manga, 1.*i/chapterLis.size());
             }
+            if (chapters.size() <= 0){
+                throw new MangaException("No Chapters found");
+            }
             return chapters;
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new MangaException("Error getting chapters - IO");
+        }catch (NullPointerException e) {
+            throw new MangaException("Error getting chapters - NP");
         }
-        return null;
     }
 
     private List<Page> getPages(Chapter chapter){
@@ -105,7 +111,9 @@ public class Mangahome implements SiteInterface {
                 pages.add(page);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new MangaException("Error getting pages - IO");
+        } catch (NullPointerException e) {
+            throw new MangaException("Error getting pages - NP");
         }
         return pages;
     }
@@ -118,9 +126,8 @@ public class Mangahome implements SiteInterface {
             Document doc = connection.get();
             return doc.select("img#image").first().attr("src");
         }catch(IOException ie) {
-            ie.printStackTrace();
+            throw new MangaException("Error getting page image url");
         }
-        return null;
     }
 
 }
