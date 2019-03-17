@@ -126,7 +126,9 @@ public class Mangahome implements SiteInterface {
             Document doc = connection.get();
             return doc.select("img#image").first().attr("src");
         }catch(IOException ie) {
-            throw new MangaException("Error getting page image url");
+            throw new MangaException("Error getting page image url - IO");
+        }catch(NullPointerException e) {
+            throw new MangaException("Error getting page image url - NP");
         }
     }
 

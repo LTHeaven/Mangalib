@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
+import javax.validation.constraints.Null;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -126,9 +127,11 @@ public class Mangahere implements SiteInterface {
             connection.userAgent("Chrome/69.0.3497.100");
 
             Document doc = connection.get();
-            return doc.select("img#image").first().attr("src");
+            return doc.select("img.reader-main-img").first().attr("src");
         }catch(IOException ie) {
-            throw new MangaException("Error getting page image url");
+            throw new MangaException("Error getting page image url - IO");
+        }catch(NullPointerException e) {
+            throw new MangaException("Error getting page image url - NP");
         }
     }
 

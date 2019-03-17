@@ -21,6 +21,7 @@ import javax.imageio.ImageIO;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.beans.ExceptionListener;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
@@ -54,8 +55,8 @@ public class MangaServiceImpl implements MangaService{
         SiteInterface site;
         if (url.contains("mangahome")){
             site = mangahome;
-        }else if (url.contains("mangahere")){
-            site = mangahere;
+//        }else if (url.contains("mangahere")){
+//            site = mangahere;
         }else{
             throw new SiteNotSupportedException("Provided manga website is not supported");
         }
@@ -88,12 +89,16 @@ public class MangaServiceImpl implements MangaService{
             }
             String currentStatus = "0/" + max;
             System.out.print(currentStatus);
+            boolean noException = true;
             for(Chapter chapter : chapters){
                 downloadImages(chapter, site, executorService, max, current, manga);
             }
             try {
                 executorService.shutdown();
                 executorService.awaitTermination(5, TimeUnit.MINUTES);
+                if (manga.isError()) {
+                    throw new MangaException(manga.getStatus());
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -209,22 +214,38 @@ public class MangaServiceImpl implements MangaService{
                 setProgress(manga, ((double)current.get())/max);
             } catch(Exception e){
                 String finalImagePath = imagePath;
-                executorService.submit(() -> {
-                    Image image = getImage(site, page, finalImagePath);
-                    for(int i = 0; i<3 && image == null; i++){
-                        log("download image failed, retrying...");
+                CustomRunnable runnable = new CustomRunnable() {
+                    @Override
+                    public void run() {
                         try {
-                            Thread. sleep(1000);
-                        } catch (InterruptedException e1) {
-                            e1.printStackTrace();
+                            String currentStatus = "\r--- Getting Images " + current.incrementAndGet() + "/" + max;
+                            System.out.print(currentStatus);
+                            Image image = MangaServiceImpl.this.getImage(site, page, finalImagePath);
+                            for (int i = 0; i < 3 && image == null; i++) {
+                                MangaServiceImpl.this.log("download image failed, retrying...");
+                                try {
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e1) {
+                                    e1.printStackTrace();
+                                }
+                                image = MangaServiceImpl.this.getImage(site, page, finalImagePath);
+                            }
+                            page.setImageFilePath(finalImagePath);
+                            MangaServiceImpl.this.setProgress(manga, ((double) current.get()) / max);
+                        } catch (MangaException ex) {
+                            getListener().exceptionThrown(ex);
                         }
-                        image = getImage(site, page, finalImagePath);
                     }
-                    page.setImageFilePath(finalImagePath);
-                    String currentStatus = "\r--- Getting Images " + current.incrementAndGet() + "/" + max;
-                    System.out.print(currentStatus);
-                    setProgress(manga, ((double)current.get())/max);
+                };
+                runnable.setListener(new ExceptionListener() {
+                    @Override
+                    public void exceptionThrown(Exception e) {
+                        manga.setStatus(e.getMessage());
+                        manga.setError(true);
+                        executorService.shutdownNow();
+                    }
                 });
+                executorService.submit(runnable);
             }
         }
     }
@@ -295,5 +316,17 @@ public class MangaServiceImpl implements MangaService{
     public void setProgress(Manga manga, double progress){
         manga.setProgress(progress);
         mangaRepository.save(manga);
+    }
+
+    private abstract class CustomRunnable implements Runnable {
+        private ExceptionListener listener;
+
+        public ExceptionListener getListener() {
+            return listener;
+        }
+
+        public void setListener(ExceptionListener listener) {
+            this.listener = listener;
+        }
     }
 }
