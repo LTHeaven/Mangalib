@@ -63,7 +63,7 @@ angular.module('overview', [])
         };
 
         $scope.getEncodedString= function (string) {
-            return encodeURI(string);
+            return encodeURIComponent(string);
         };
 
         $scope.toggleSummary = function(id){

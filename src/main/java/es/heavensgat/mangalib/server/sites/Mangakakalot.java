@@ -8,7 +8,6 @@ import es.heavensgat.mangalib.server.service.MangaServiceImpl;
 import es.heavensgat.mangalib.server.util.MangaException;
 import es.heavensgat.mangalib.server.util.SiteInterface;
 import org.jsoup.Connection;
-import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -26,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
-public class Mangahome implements SiteInterface {
+public class Mangakakalot implements SiteInterface {
     @Autowired
     private MangaService mangaService;
 
@@ -38,10 +37,10 @@ public class Mangahome implements SiteInterface {
             Document doc = connection.get();
 
             manga.setBaseURL(url);
-            manga.setTitle(doc.select("div.manga-detail > h1").first().text());
-            Elements authors = doc.select("div.manga-detail a[href^=/author/]");
-            Elements artists = doc.select("div.manga-detail a[href^=/artist/]");
-            manga.setSummary(doc.select("div.manga-detailmiddle > p.mobile-none").first().text());
+            manga.setTitle(doc.select("ul.manga-info-text h1").first().text());
+            Elements authors = doc.select("ul.manga-info-text a[href*=author/]");
+            Elements artists = doc.select("ul.manga-info-text a[href*=artist/]");
+            manga.setSummary(doc.select("div#noidungm").first().text());
             manga.setAuthor(getPersonIfExists(authors));
             manga.setArtist(getPersonIfExists(artists));
 
@@ -49,7 +48,7 @@ public class Mangahome implements SiteInterface {
             manga.setMangaFolderPath(folderPath);
             File outputFile = new File(folderPath + "/cover.jpg");
             outputFile.mkdirs();
-            ImageIO.write((BufferedImage) mangaService.downloadImage(doc.select("img.detail-cover").first().attr("src")), "jpg", outputFile);
+            ImageIO.write((BufferedImage) mangaService.downloadImage(doc.select("div.manga-info-pic img").first().attr("src")), "jpg", outputFile);
             return manga;
         } catch (IOException e) {
             throw new MangaException("Error getting base manga info");
@@ -71,19 +70,19 @@ public class Mangahome implements SiteInterface {
             connection.userAgent("Chrome/69.0.3497.100");
 
             Document doc = connection.get();
-            Elements chapterLis = doc.select(".detail-chlist > li");
-            Collections.reverse(chapterLis);
+            Elements chapterAs = doc.select("div.chapter-list a");
+            Collections.reverse(chapterAs);
             List<Chapter> chapters = new ArrayList<>();
-            for(int i = 0; i < chapterLis.size(); i++){
-                Element li = chapterLis.get(i);
+            for(int i = 0; i < chapterAs.size(); i++){
+                Element a = chapterAs.get(i);
                 Chapter chapter = new Chapter();
-                chapter.setTitle((chapterLis.indexOf(li)+1) + "-" + li.select("span.mobile-none").first().text());
-                chapter.setFirstPageURL(li.select("a[href]").first().attr("href").replaceFirst("//www.", "http://"));
+                chapter.setTitle((chapterAs.indexOf(a)+1) + "-" + a.attr("title"));
+                chapter.setFirstPageURL(a.attr("href").replaceFirst("//www.", "http://"));
                 chapter.setPages(getPages(chapter));
                 chapter.setManga(manga);
                 chapters.add(chapter);
                 System.out.println(chapter.getTitle());
-                mangaService.setProgress(manga, 1.*i/chapterLis.size());
+                mangaService.setProgress(manga, 1.*i/chapterAs.size());
             }
             if (chapters.size() <= 0){
                 throw new MangaException("No Chapters found");
@@ -103,17 +102,15 @@ public class Mangahome implements SiteInterface {
             connection.userAgent("Chrome/69.0.3497.100");
 
             Document doc = connection.get();
-            Elements pageElements = doc.select("div.mangaread-pagenav").first().select("option:not(:contains(featured))");
+            Elements pageElements = doc.select("div#vungdoc img");
             for(Element currentPage : pageElements){
                 Page page = new Page();
                 page.setPageNumber(pageElements.indexOf(currentPage) + 1);
-                page.setUrl(currentPage.attr("value").replace("//www.", "http://"));
+                page.setUrl(currentPage.attr("src"));
                 page.setParentChapter(chapter);
                 pages.add(page);
             }
-        } catch(HttpStatusException e){
-            throw new MangaException("Error getting pages - Http Status code: " + e.getStatusCode());
-        }catch (IOException e) {
+        } catch (IOException e) {
             throw new MangaException("Error getting pages - IO");
         } catch (NullPointerException e) {
             throw new MangaException("Error getting pages - NP");
@@ -123,13 +120,7 @@ public class Mangahome implements SiteInterface {
 
     public String getImageUrl(Page page){
         try{
-            Connection connection = Jsoup.connect(page.getUrl());
-            connection.userAgent("Chrome/69.0.3497.100");
-
-            Document doc = connection.get();
-            return doc.select("img#image").first().attr("src");
-        }catch(IOException ie) {
-            throw new MangaException("Error getting page image url - IO url: " + page.getUrl());
+            return page.getUrl();
         }catch(NullPointerException e) {
             throw new MangaException("Error getting page image url - NP");
         }

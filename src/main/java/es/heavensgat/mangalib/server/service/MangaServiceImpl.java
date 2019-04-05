@@ -8,6 +8,7 @@ import es.heavensgat.mangalib.server.models.Chapter;
 import es.heavensgat.mangalib.server.repository.MangaRepository;
 import es.heavensgat.mangalib.server.sites.Mangahere;
 import es.heavensgat.mangalib.server.sites.Mangahome;
+import es.heavensgat.mangalib.server.sites.Mangakakalot;
 import es.heavensgat.mangalib.server.util.MangaException;
 import es.heavensgat.mangalib.server.util.SiteInterface;
 import es.heavensgat.mangalib.server.util.SiteNotSupportedException;
@@ -45,7 +46,7 @@ public class MangaServiceImpl implements MangaService{
     @Autowired
     private MangaRepository mangaRepository;
     @Autowired
-    private Mangahere mangahere;
+    private Mangakakalot mangakakalot;
     @Autowired
     private Mangahome mangahome;
 
@@ -55,8 +56,8 @@ public class MangaServiceImpl implements MangaService{
         SiteInterface site;
         if (url.contains("mangahome")){
             site = mangahome;
-//        }else if (url.contains("mangahere")){
-//            site = mangahere;
+        }else if (url.contains("mangakakalot")){
+            site = mangakakalot;
         }else{
             throw new SiteNotSupportedException("Provided manga website is not supported");
         }
@@ -81,7 +82,7 @@ public class MangaServiceImpl implements MangaService{
             manga.setChapterAmount(chapters.size());
 
             log("Getting Images", manga);
-            ExecutorService executorService = Executors.newFixedThreadPool(10);
+            ExecutorService executorService = Executors.newFixedThreadPool(5);
             int max = 0;
             AtomicInteger current = new AtomicInteger(0);
             for(Chapter chapter : chapters) {
@@ -110,6 +111,8 @@ public class MangaServiceImpl implements MangaService{
         }catch(MangaException e){
             manga.setError(true);
             log(e.getMessage(), manga);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
         return manga;
     }
@@ -201,9 +204,9 @@ public class MangaServiceImpl implements MangaService{
     }
 
 
-    public void downloadImages(Chapter emptyChapter, SiteInterface site, ExecutorService executorService, int max, AtomicInteger current, Manga manga) {
+    public void downloadImages(Chapter emptyChapter, SiteInterface site, ExecutorService executorService, int max, AtomicInteger current, Manga manga) throws UnsupportedEncodingException {
         for(Page page : emptyChapter.getPages()) {
-            String path = manga.getMangaFolderPath() + "/" + emptyChapter.getTitle() + "/";
+            String path = manga.getMangaFolderPath() + "/" + URLEncoder.encode(emptyChapter.getTitle(), "UTF-8") + "/";
             String imagePath = path + page.getPageNumber() + ".jpg";
             imagePath = imagePath.replace(' ', '_');
             try {
@@ -252,10 +255,6 @@ public class MangaServiceImpl implements MangaService{
 
     public Image getImage(SiteInterface site, Page page, String imagePath){
         try{
-            Connection connection = Jsoup.connect(page.getUrl());
-            connection.userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31");
-
-            Document doc = connection.get();
             BufferedImage image = (BufferedImage)downloadImage(site.getImageUrl(page));
             File outputFile = new File(imagePath);
             outputFile.mkdirs();
