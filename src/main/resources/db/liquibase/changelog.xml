@@ -1,0 +1,52 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+   http://www.liquibase.org/xml/ns/dbchangelog
+   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet author="bbender" id="1">
+        <createTable tableName="manga">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="artist" type="VARCHAR(255)"/>
+            <column name="author" type="VARCHAR(255)"/>
+            <column name="baseurl" type="VARCHAR(255)"/>
+            <column name="manga_folder_path" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="summary" type="VARCHAR(5000)"/>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="progress" type="DOUBLE" />
+            <column name="added" type="BIGINT" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="bbender">
+        <addColumn tableName="manga">
+            <column name="chapter_amount" type="INT"/>
+        </addColumn>
+        <update tableName="manga">
+            <column name="chapter_amount" value="1" />
+            <where>true</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="3" author="bbender">
+        <addColumn tableName="manga">
+            <column name="error" type="BIT" valueBoolean="0"/>
+        </addColumn>
+        <sql>
+            update manga set error = 1 where status &lt;&gt; '' OR chapter_amount = 0;
+        </sql>
+    </changeSet>
+
+    <changeSet id="4" author="bbender">
+        <sql>
+            update manga set status = "legacy error" where error
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

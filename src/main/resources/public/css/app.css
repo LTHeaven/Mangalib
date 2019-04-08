@@ -41,4 +41,80 @@ body {
   background-color: #13a3a8;
 }
 
+.button-card {
+  width: 100%;
+}
+
+.summary-dropdown {
+  position: absolute;
+  width: 100%;
+  padding: 10px;
+  margin-top: 0;
+  z-index: 999;
+  transform: translateY(-1rem);
+}
+
+.button-done {
+  background-color: #2bb2a4;
+}
+.button-done:hover, .button-done:focus {
+  background-color: #269e91;
+}
+
+.button-incomplete {
+  background-color: #e1cba9;
+}
+.button-incomplete:hover, .button-incomplete:focus {
+  background-color: #dbbf96;
+}
+
+.button-error {
+  background-color: #d08a8e;
+}
+.button-error:hover, .button-error:focus {
+  background-color: #c8787d;
+}
+
+.my-progress {
+  background: none;
+  border: 2px solid #e1cba9;
+  position: relative;
+  width: 100%;
+  height: 2rem;
+}
+
+.my-progress-meter {
+  position: absolute;
+  background-color: #e1cba9;
+  height: 100%;
+}
+
+.my-progress-meter-text {
+  position: absolute;
+  left: 10px;
+  color: #fbf9f5;
+  display: inline-block;
+  z-index: 998;
+}
+
+.my-progress-meter-percentage {
+  position: absolute;
+  right: 10px;
+  color: #fbf9f5;
+  display: inline-block;
+  z-index: 998;
+}
+
+.manga-title {
+  word-break: break-all;
+}
+
+.error-message {
+  background: none;
+  border: 2px solid #d08a8e;
+  position: relative;
+  width: 100%;
+  height: 2rem;
+}
+
 /*# sourceMappingURL=app.css.map */

@@ -48,3 +48,82 @@ body{
     background-color: darken($color-accent, 5%);
   }
 }
+
+.button-card{
+  width: 100%;
+}
+
+.summary-dropdown{
+  position: absolute;
+  width: 100%;
+  padding: 10px;
+  margin-top: 0;
+  z-index: 999;
+  transform: translateY(-1rem);
+}
+
+.button-done{
+  background-color: lighten($color-done, 10%);
+  &:hover,
+  &:focus {
+    background-color: lighten($color-done, 5%);
+  }
+}
+
+.button-incomplete{
+  background-color: lighten($color-incomplete, 10%);
+  &:hover,
+  &:focus {
+    background-color: lighten($color-incomplete, 5%);
+  }
+}
+
+.button-error {
+  background-color: lighten($color-error, 10%);
+  &:hover,
+  &:focus {
+    background-color: lighten($color-error, 5%);
+  }
+}
+
+.my-progress{
+  background: none;
+  border: 2px solid lighten($color-incomplete, 10%);
+  position: relative;
+  width: 100%;
+  height: 2rem;
+}
+
+.my-progress-meter{
+  position: absolute;
+  background-color: lighten($color-incomplete, 10%);
+  height: 100%;
+}
+
+.my-progress-meter-text{
+  position: absolute;
+  left: 10px;
+  color: lighten($color-incomplete, 30%);
+  display: inline-block;
+  z-index: 998;
+}
+
+.my-progress-meter-percentage{
+  position: absolute;
+  right: 10px;
+  color: lighten($color-incomplete, 30%);
+  display: inline-block;
+  z-index: 998;
+}
+
+.manga-title{
+  word-break: break-all;
+}
+
+.error-message{
+  background: none;
+  border: 2px solid lighten($color-error, 10%);
+  position: relative;
+  width: 100%;
+  height: 2rem;
+}

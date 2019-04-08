@@ -1,24 +1,96 @@
 package es.heavensgat.mangalib.server.models;
 
 
+
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Manga {
+@Entity
+@Table(name = "Manga")
+public class Manga implements Comparable{
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Transient
     private List<Chapter> chapters = new ArrayList<Chapter>();
+    @Column(name = "title")
     private String title;
+    @Column(name = "author")
     private String author;
+    @Column(name = "artist")
     private String artist;
+    @Column(name = "summary")
     private String summary;
+    @Column(name = "baseURL")
     private String baseURL;
-    private String coverImage;
+    @Column(name = "mangaFolderPath")
+    private String mangaFolderPath;
+    @Column(name = "status")
+    private String status;
+    @Column(name = "progress")
+    private double progress;
+    @Column(name = "added")
+    private long added;
+    @Column(name = "chapterAmount")
+    private int chapterAmount;
+    @Column(name = "error")
+    private boolean error = false;
 
-    public String getCoverImage() {
-        return coverImage;
+    public int getChapterAmount() {
+        return chapterAmount;
     }
 
-    public void setCoverImage(String coverImage) {
-        this.coverImage = coverImage;
+    public void setChapterAmount(int chapterAmount) {
+        this.chapterAmount = chapterAmount;
+    }
+
+    public boolean isError() {
+        return error;
+    }
+
+    public void setError(boolean error) {
+        this.error = error;
+    }
+
+    public long getAdded() {
+        return added;
+    }
+
+    public void setAdded(long added) {
+        this.added = added;
+    }
+
+    public double getProgress() {
+        return progress;
+    }
+
+    public void setProgress(double progress) {
+        this.progress = progress;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getMangaFolderPath() {
+        return mangaFolderPath;
+    }
+
+    public void setMangaFolderPath(String mangaFolderPath) {
+        this.mangaFolderPath = mangaFolderPath;
     }
 
     public String getArtist() {
@@ -67,6 +139,12 @@ public class Manga {
 
     public void setBaseURL(String baseURL) {
         this.baseURL = baseURL;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        Manga manga= (Manga) o;
+        return Long.compare(manga.getAdded(), added);
     }
 
     @Override

@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface SiteInterface {
 
-    Manga getBaseMangaInfo(String url);
+    Manga getBaseMangaInfo(String url, Manga manga);
 
     /**
      * Returns a List of Chapters
