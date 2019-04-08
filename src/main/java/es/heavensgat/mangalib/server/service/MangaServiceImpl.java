@@ -56,7 +56,7 @@ public class MangaServiceImpl implements MangaService{
         SiteInterface site;
         if (url.contains("mangahome")){
             site = mangahome;
-        }else if (url.contains("mangakakalot")){
+        }else if (url.contains("mangakakalot") || url.contains("manganelo")){
             site = mangakakalot;
         }else{
             throw new SiteNotSupportedException("Provided manga website is not supported");
