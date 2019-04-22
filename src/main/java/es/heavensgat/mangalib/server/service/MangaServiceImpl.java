@@ -122,7 +122,7 @@ public class MangaServiceImpl implements MangaService{
         com.itextpdf.text.Image img;
         try{
             img = com.itextpdf.text.Image.getInstance(imagePath);
-        }catch(FileNotFoundException e){
+        }catch(Exception e){
             img = com.itextpdf.text.Image.getInstance(MangaServiceImpl.class.getResource("/images/missing-page.jpg"));
         }
         addImage(img, document);
