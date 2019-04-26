@@ -36,10 +36,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
-public class MangaServiceImpl implements MangaService{
+public class MangaServiceImpl implements MangaService {
     public static long time = System.currentTimeMillis();
     public static int MAX_CHAPTERS = -1;
-//    public static String BASE_DIRECTORY = "C:/Users/bened_000/Pictures/Mangalib";
+    //    public static String BASE_DIRECTORY = "C:/Users/bened_000/Pictures/Mangalib";
     public static String BASE_DIRECTORY = "/opt/tomcat";
     public static int CHAPTER_SPLIT_AMOUNT = 50;
 
@@ -58,14 +58,14 @@ public class MangaServiceImpl implements MangaService{
 
         Manga manga;
         List<Manga> byBaseURL = mangaRepository.findByBaseURL(url);
-        if (byBaseURL.size() > 0){
+        if (byBaseURL.size() > 0) {
             manga = byBaseURL.get(0);
             manga.setError(false);
             manga.setUpdated(true);
-        }else{
+        } else {
             manga = new Manga();
         }
-        try{
+        try {
             manga.setAdded(System.currentTimeMillis());
             manga.setProgress(0);
             log("Getting base manga info", manga);
@@ -80,13 +80,13 @@ public class MangaServiceImpl implements MangaService{
             ExecutorService executorService = Executors.newFixedThreadPool(5);
             int max = 0;
             AtomicInteger current = new AtomicInteger(0);
-            for(Chapter chapter : chapters) {
+            for (Chapter chapter : chapters) {
                 max += chapter.getPages().size();
             }
             String currentStatus = "0/" + max;
             System.out.print(currentStatus);
             boolean noException = true;
-            for(Chapter chapter : chapters){
+            for (Chapter chapter : chapters) {
                 downloadImages(chapter, site, executorService, max, current, manga);
             }
             try {
@@ -103,7 +103,7 @@ public class MangaServiceImpl implements MangaService{
             log("Generating PDF", manga);
             generatePDF(manga);
             log("", manga);
-        }catch(MangaException e){
+        } catch (MangaException e) {
             manga.setError(true);
             log(e.getMessage(), manga);
         } catch (UnsupportedEncodingException e) {
@@ -113,11 +113,11 @@ public class MangaServiceImpl implements MangaService{
     }
 
     private SiteInterface getMangaSite(String url) {
-        if (url.contains("mangahome")){
+        if (url.contains("mangahome")) {
             return mangahome;
-        }else if (url.contains("mangakakalot") || url.contains("manganelo")){
+        } else if (url.contains("mangakakalot") || url.contains("manganelo")) {
             return mangakakalot;
-        }else{
+        } else {
             throw new SiteNotSupportedException("Provided manga website is not supported");
         }
     }
@@ -125,9 +125,9 @@ public class MangaServiceImpl implements MangaService{
 
     private void addImagePage(String imagePath, com.itextpdf.text.Document document) throws IOException, DocumentException {
         com.itextpdf.text.Image img;
-        try{
+        try {
             img = com.itextpdf.text.Image.getInstance(imagePath);
-        }catch(Exception e){
+        } catch (Exception e) {
             img = com.itextpdf.text.Image.getInstance(MangaServiceImpl.class.getResource("/images/missing-page.jpg"));
         }
         addImage(img, document);
@@ -155,15 +155,15 @@ public class MangaServiceImpl implements MangaService{
     }
 
     private void generatePDF(Manga manga) {
-        if(manga.getChapters().size()>CHAPTER_SPLIT_AMOUNT){
-            for (int i = 0; i*CHAPTER_SPLIT_AMOUNT < manga.getChapters().size(); i++){
+        if (manga.getChapters().size() > CHAPTER_SPLIT_AMOUNT) {
+            for (int i = 0; i * CHAPTER_SPLIT_AMOUNT < manga.getChapters().size(); i++) {
                 com.itextpdf.text.Document document = new com.itextpdf.text.Document();
                 try {
-                    PdfWriter.getInstance(document, new FileOutputStream(manga.getMangaFolderPath() + "/" +  URLEncoder.encode(manga.getTitle(), "UTF-8") + "-" + (i+1) + ".pdf"));
+                    PdfWriter.getInstance(document, new FileOutputStream(manga.getMangaFolderPath() + "/" + URLEncoder.encode(manga.getTitle(), "UTF-8") + "-" + (i + 1) + ".pdf"));
                     document.open();
                     addImagePage(manga.getMangaFolderPath() + "/cover.jpg", document);
                     int lastChapter = i * CHAPTER_SPLIT_AMOUNT + CHAPTER_SPLIT_AMOUNT;
-                    for (Chapter chapter : manga.getChapters().subList(i*CHAPTER_SPLIT_AMOUNT, lastChapter>manga.getChapters().size() ? manga.getChapters().size() : lastChapter)) {
+                    for (Chapter chapter : manga.getChapters().subList(i * CHAPTER_SPLIT_AMOUNT, lastChapter > manga.getChapters().size() ? manga.getChapters().size() : lastChapter)) {
                         addChapterCover(manga.getTitle(), chapter.getTitle(), document);
                         for (Page page : chapter.getPages()) {
                             addImagePage(page.getImageFilePath(), document);
@@ -177,14 +177,14 @@ public class MangaServiceImpl implements MangaService{
                     throw new MangaException("Error generating PDF (Document Error)");
                 } catch (IOException e) {
                     throw new MangaException("Error generating PDF (IO Error)");
-                } finally{
+                } finally {
                     document.close();
                 }
             }
-        }else{
+        } else {
             com.itextpdf.text.Document document = new com.itextpdf.text.Document();
             try {
-                PdfWriter.getInstance(document, new FileOutputStream(manga.getMangaFolderPath() + "/" +  URLEncoder.encode(manga.getTitle(), "UTF-8") + ".pdf"));
+                PdfWriter.getInstance(document, new FileOutputStream(manga.getMangaFolderPath() + "/" + URLEncoder.encode(manga.getTitle(), "UTF-8") + ".pdf"));
                 document.open();
                 addImagePage(manga.getMangaFolderPath() + "/cover.jpg", document);
                 for (Chapter chapter : manga.getChapters()) {
@@ -201,7 +201,7 @@ public class MangaServiceImpl implements MangaService{
                 throw new MangaException("Error generating PDF (Document Error)");
             } catch (IOException e) {
                 throw new MangaException("Error generating PDF (IO Error)");
-            } finally{
+            } finally {
                 document.close();
             }
         }
@@ -210,7 +210,7 @@ public class MangaServiceImpl implements MangaService{
 
 
     public void downloadImages(Chapter emptyChapter, SiteInterface site, ExecutorService executorService, int max, AtomicInteger current, Manga manga) throws UnsupportedEncodingException {
-        for(Page page : emptyChapter.getPages()) {
+        for (Page page : emptyChapter.getPages()) {
             String path = manga.getMangaFolderPath() + "/" + URLEncoder.encode(emptyChapter.getTitle(), "UTF-8") + "/";
             String imagePath = path + page.getPageNumber() + ".jpg";
             imagePath = imagePath.replace(' ', '_');
@@ -219,8 +219,8 @@ public class MangaServiceImpl implements MangaService{
                 page.setImageFilePath(imagePath);
                 String currentStatus = "\r--- Getting Images " + current.incrementAndGet() + "/" + max;
                 System.out.print(currentStatus);
-                setProgress(manga, ((double)current.get())/max);
-            } catch(Exception e){
+                setProgress(manga, ((double) current.get()) / max);
+            } catch (Exception e) {
                 String finalImagePath = imagePath;
                 CustomRunnable runnable = new CustomRunnable() {
                     @Override
@@ -258,17 +258,17 @@ public class MangaServiceImpl implements MangaService{
         }
     }
 
-    public Image getImage(SiteInterface site, Page page, String imagePath){
-        try{
-            BufferedImage image = (BufferedImage)downloadImage(site.getImageUrl(page));
+    public Image getImage(SiteInterface site, Page page, String imagePath) {
+        try {
+            BufferedImage image = (BufferedImage) downloadImage(site.getImageUrl(page));
             File outputFile = new File(imagePath);
             outputFile.mkdirs();
             ImageIO.write(image, "jpg", outputFile);
             return image;
-        } catch(SocketTimeoutException se) {
+        } catch (SocketTimeoutException se) {
             log("Socket Timeout getImage");
             se.printStackTrace();
-        }catch(IOException ie) {
+        } catch (IOException ie) {
             log("IO Exception getImage");
             ie.printStackTrace();
         }
@@ -277,7 +277,7 @@ public class MangaServiceImpl implements MangaService{
 
 
     @Override
-    public  Image downloadImage(String url) throws IOException{
+    public Image downloadImage(String url) throws IOException {
         final URL urlObj = new URL(url);
         final HttpURLConnection connection = (HttpURLConnection) urlObj
                 .openConnection();
@@ -290,9 +290,9 @@ public class MangaServiceImpl implements MangaService{
     }
 
     @Override
-    public MangaListingDTO getMangas(){
+    public MangaListingDTO getMangas() {
         MangaListingDTO ret = new MangaListingDTO();
-        File root  = new File(MangaServiceImpl.BASE_DIRECTORY + "/mangas/");
+        File root = new File(MangaServiceImpl.BASE_DIRECTORY + "/mangas/");
         root.mkdirs();
         List<Manga> all = new ArrayList<>();
         mangaRepository.findAll().forEach(all::add);
@@ -302,7 +302,7 @@ public class MangaServiceImpl implements MangaService{
     }
 
     private void log(String message, Manga manga) {
-        if(manga != null) {
+        if (manga != null) {
             manga.setStatus(message);
             mangaRepository.save(manga);
         }
@@ -317,7 +317,7 @@ public class MangaServiceImpl implements MangaService{
     }
 
     @Override
-    public void setProgress(Manga manga, double progress){
+    public void setProgress(Manga manga, double progress) {
         manga.setProgress(progress);
         mangaRepository.save(manga);
     }
@@ -325,14 +325,18 @@ public class MangaServiceImpl implements MangaService{
     @Override
     public void checkForUpdates() {
         MangaListingDTO ret = new MangaListingDTO();
-        File root  = new File(MangaServiceImpl.BASE_DIRECTORY + "/mangas/");
+        File root = new File(MangaServiceImpl.BASE_DIRECTORY + "/mangas/");
         root.mkdirs();
         List<Manga> allMangas = new ArrayList<>();
         mangaRepository.findAll().forEach(allMangas::add);
-        for (Manga manga : allMangas){
-            if (manga.getChapterAmount() > 0){
-                if (getMangaSite(manga.getBaseURL()).newChaptersFound(manga)){
-                    crawlCompleteManga(manga.getBaseURL());
+        for (Manga manga : allMangas) {
+            if (manga.getChapterAmount() > 0) {
+                try {
+                    if (getMangaSite(manga.getBaseURL()).newChaptersFound(manga)) {
+                        crawlCompleteManga(manga.getBaseURL());
+                    }
+                } catch (SiteNotSupportedException e) {
+                    continue;
                 }
             }
         }

@@ -46,14 +46,13 @@ public class MainController {
     public void getCover(@RequestParam(value = "file_name") String fileName, HttpServletResponse response) {
         try{
             InputStream is = new FileInputStream(MangaServiceImpl.BASE_DIRECTORY + "/mangas/" + URLEncoder.encode(fileName, "UTF-8") + "/cover.jpg");
-//            response.setContentType("application/jpg");
             IOUtils.copy(is, response.getOutputStream());
             response.flushBuffer();
         } catch (IOException ex) {
         }
     }
 
-    @Scheduled(cron = "30 2 * * *")
+    @Scheduled(cron = "0 0 3 * * ?")
     public void checkForUpdated(){
         mangaService.checkForUpdates();
     }

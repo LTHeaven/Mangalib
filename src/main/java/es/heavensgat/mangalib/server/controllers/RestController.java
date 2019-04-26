@@ -22,6 +22,11 @@ public class RestController {
         return mangaService.getMangas();
     }
 
+    @RequestMapping("checkForUpdates")
+    public void checkForUpdates(){
+        mangaService.checkForUpdates();
+    }
+
     @PostMapping("/mangas")
     public void crawlManga(@RequestBody String mangaUrl) {
         String url = mangaUrl;
