@@ -54,19 +54,14 @@ public class MangaServiceImpl implements MangaService{
     @Override
     public Manga crawlCompleteManga(String url) {
         SiteInterface site;
-        if (url.contains("mangahome")){
-            site = mangahome;
-        }else if (url.contains("mangakakalot") || url.contains("manganelo")){
-            site = mangakakalot;
-        }else{
-            throw new SiteNotSupportedException("Provided manga website is not supported");
-        }
+        site = getMangaSite(url);
 
         Manga manga;
         List<Manga> byBaseURL = mangaRepository.findByBaseURL(url);
         if (byBaseURL.size() > 0){
             manga = byBaseURL.get(0);
             manga.setError(false);
+            manga.setUpdated(true);
         }else{
             manga = new Manga();
         }
@@ -115,6 +110,16 @@ public class MangaServiceImpl implements MangaService{
             e.printStackTrace();
         }
         return manga;
+    }
+
+    private SiteInterface getMangaSite(String url) {
+        if (url.contains("mangahome")){
+            return mangahome;
+        }else if (url.contains("mangakakalot") || url.contains("manganelo")){
+            return mangakakalot;
+        }else{
+            throw new SiteNotSupportedException("Provided manga website is not supported");
+        }
     }
 
 
@@ -314,6 +319,30 @@ public class MangaServiceImpl implements MangaService{
     @Override
     public void setProgress(Manga manga, double progress){
         manga.setProgress(progress);
+        mangaRepository.save(manga);
+    }
+
+    @Override
+    public void checkForUpdates() {
+        MangaListingDTO ret = new MangaListingDTO();
+        File root  = new File(MangaServiceImpl.BASE_DIRECTORY + "/mangas/");
+        root.mkdirs();
+        List<Manga> allMangas = new ArrayList<>();
+        mangaRepository.findAll().forEach(allMangas::add);
+        for (Manga manga : allMangas){
+            if (manga.getChapterAmount() > 0){
+                if (getMangaSite(manga.getBaseURL()).newChaptersFound(manga)){
+                    crawlCompleteManga(manga.getBaseURL());
+                }
+            }
+        }
+
+    }
+
+    @Override
+    public void removeUpdated(String mangaFolderPath) {
+        Manga manga = mangaRepository.findByMangaFolderPath(mangaFolderPath);
+        manga.setUpdated(false);
         mangaRepository.save(manga);
     }
 

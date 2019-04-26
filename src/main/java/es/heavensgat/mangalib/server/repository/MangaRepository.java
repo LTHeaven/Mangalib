@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface MangaRepository extends CrudRepository<Manga, Integer> {
     List<Manga> findByBaseURL(String baseUrl);
+    Manga findByMangaFolderPath(String mangaFolderPath);
 }

@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
+@Deprecated
 public class Mangahere implements SiteInterface {
     @Autowired
     private MangaService mangaService;
@@ -133,6 +134,11 @@ public class Mangahere implements SiteInterface {
         }catch(NullPointerException e) {
             throw new MangaException("Error getting page image url - NP");
         }
+    }
+
+    @Override
+    public boolean newChaptersFound(Manga manga) {
+        return false;
     }
 
 }

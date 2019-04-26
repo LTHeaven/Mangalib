@@ -14,4 +14,8 @@ public interface MangaService {
     MangaListingDTO getMangas();
 
     void setProgress(Manga manga, double progress);
+
+    void checkForUpdates();
+
+    void removeUpdated(String mangaFolderPath);
 }

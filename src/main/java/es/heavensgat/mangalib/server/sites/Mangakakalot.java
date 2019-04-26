@@ -59,9 +59,23 @@ public class Mangakakalot implements SiteInterface {
 
     private String getPersonIfExists(Elements elements){
         if(elements.size() > 0){
-            return elements.first().text();
+            return "N/A";
         }
         return "N/A";
+    }
+
+    public boolean newChaptersFound(Manga manga) {
+        try{
+            Connection connection = Jsoup.connect(manga.getBaseURL());
+            connection.userAgent("Chrome/69.0.3497.100");
+
+            Document doc = connection.get();
+            Elements chapterAs = doc.select("div.chapter-list a");
+            return chapterAs.size() > manga.getChapterAmount();
+        } catch (IOException e) {
+        }catch (NullPointerException e) {
+        }
+        return false;
     }
 
     public List<Chapter> getChapters(Manga manga) {

@@ -36,6 +36,16 @@ public class Manga implements Comparable{
     private int chapterAmount;
     @Column(name = "error")
     private boolean error = false;
+    @Column(name = "updated")
+    private boolean updated = false;
+
+    public boolean isUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(boolean updated) {
+        this.updated = updated;
+    }
 
     public int getChapterAmount() {
         return chapterAmount;

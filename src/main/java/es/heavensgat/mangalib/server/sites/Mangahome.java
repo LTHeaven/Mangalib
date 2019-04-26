@@ -65,6 +65,20 @@ public class Mangahome implements SiteInterface {
         return "N/A";
     }
 
+    public boolean newChaptersFound(Manga manga) {
+        try{
+            Connection connection = Jsoup.connect(manga.getBaseURL());
+            connection.userAgent("Chrome/69.0.3497.100");
+
+            Document doc = connection.get();
+            Elements chapterLis = doc.select(".detail-chlist > li");
+            return chapterLis.size() > manga.getChapterAmount();
+        } catch (IOException e) {
+        }catch (NullPointerException e) {
+        }
+        return false;
+    }
+
     public List<Chapter> getChapters(Manga manga) {
         try{
             Connection connection = Jsoup.connect(manga.getBaseURL());

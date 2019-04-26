@@ -1,7 +1,10 @@
 package es.heavensgat.mangalib.server.controllers;
 
+import es.heavensgat.mangalib.server.service.MangaService;
 import es.heavensgat.mangalib.server.service.MangaServiceImpl;
 import org.apache.pdfbox.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,11 +21,16 @@ import java.net.URLEncoder;
  */
 @Controller
 public class MainController {
+    @Autowired
+    private MangaService mangaService;
+
     @RequestMapping(value = "/files")
     public void getFile(@RequestParam(value = "file_name") String fileName, @RequestParam(value = "index", required = false) Integer index, HttpServletResponse response) {
         try{
             String encodedName = URLEncoder.encode(fileName, "UTF-8");
-            File file = new File(MangaServiceImpl.BASE_DIRECTORY + "/mangas/" + encodedName + "/" + encodedName + (index != null ? "-" + index : "") + ".pdf");
+            String mangaFolderPath = MangaServiceImpl.BASE_DIRECTORY + "/mangas/" + encodedName;
+            File file = new File(mangaFolderPath + "/" + encodedName + (index != null ? "-" + index : "") + ".pdf");
+            mangaService.removeUpdated(mangaFolderPath);
             InputStream is = new FileInputStream(file);
             response.setContentType("application/pdf");
             response.setHeader("Content-disposition", "attachment;filename=" + fileName + (index != null ? "-" + index : "") + ".pdf");
@@ -42,9 +50,12 @@ public class MainController {
             IOUtils.copy(is, response.getOutputStream());
             response.flushBuffer();
         } catch (IOException ex) {
-            System.out.println("error reading file");
         }
     }
 
+    @Scheduled(cron = "30 2 * * *")
+    public void checkForUpdated(){
+        mangaService.checkForUpdates();
+    }
 
 }

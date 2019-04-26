@@ -24,4 +24,6 @@ public interface SiteInterface {
      * @return chapter containing all Pages
      */
     String getImageUrl(Page page);
+
+    boolean newChaptersFound(Manga manga);
 }
