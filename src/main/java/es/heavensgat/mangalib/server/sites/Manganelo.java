@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
-public class Mangakakalot implements SiteInterface {
+public class Manganelo implements SiteInterface {
     @Autowired
     protected MangaService mangaService;
 
@@ -37,10 +37,10 @@ public class Mangakakalot implements SiteInterface {
             Document doc = connection.get();
 
             manga.setBaseURL(url);
-            manga.setTitle(doc.select("ul.manga-info-text h1").first().text());
+            manga.setTitle(doc.select("div.story-info-right h1").first().text());
             Elements authors = doc.select("ul.manga-info-text a[href*=author/]");
             Elements artists = doc.select("ul.manga-info-text a[href*=artist/]");
-            manga.setSummary(doc.select("div#noidungm").first().text());
+            manga.setSummary(doc.select("div#panel-story-info-description").first().text());
             manga.setAuthor(getPersonIfExists(authors));
             manga.setArtist(getPersonIfExists(artists));
 
@@ -48,7 +48,7 @@ public class Mangakakalot implements SiteInterface {
             manga.setMangaFolderPath(folderPath);
             File outputFile = new File(folderPath + "/cover.jpg");
             outputFile.mkdirs();
-            ImageIO.write((BufferedImage) mangaService.downloadImage(doc.select("div.manga-info-pic img").first().attr("src")), "jpg", outputFile);
+            ImageIO.write((BufferedImage) mangaService.downloadImage(doc.select("span.info-image img").first().attr("src")), "jpg", outputFile);
             return manga;
         } catch (IOException e) {
             throw new MangaException("Error getting base manga info");
@@ -84,7 +84,7 @@ public class Mangakakalot implements SiteInterface {
             connection.userAgent("Chrome/69.0.3497.100");
 
             Document doc = connection.get();
-            Elements chapterAs = doc.select("div.chapter-list a");
+            Elements chapterAs = doc.select("ul.row-content-chapter a");
             Collections.reverse(chapterAs);
             List<Chapter> chapters = new ArrayList<>();
             for(int i = 0; i < chapterAs.size(); i++){
@@ -116,7 +116,7 @@ public class Mangakakalot implements SiteInterface {
             connection.userAgent("Chrome/69.0.3497.100");
 
             Document doc = connection.get();
-            Elements pageElements = doc.select("div#vungdoc img");
+            Elements pageElements = doc.select("div.container-chapter-reader img");
             for(Element currentPage : pageElements){
                 Page page = new Page();
                 page.setPageNumber(pageElements.indexOf(currentPage) + 1);

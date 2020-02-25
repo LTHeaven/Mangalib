@@ -2,26 +2,27 @@ package es.heavensgat.mangalib.server.service;
 
 import com.itextpdf.text.*;
 import com.itextpdf.text.Font;
+import com.itextpdf.text.Image;
 import com.itextpdf.text.pdf.PdfWriter;
 import es.heavensgat.mangalib.server.models.*;
 import es.heavensgat.mangalib.server.models.Chapter;
 import es.heavensgat.mangalib.server.repository.MangaRepository;
-import es.heavensgat.mangalib.server.sites.Mangahere;
 import es.heavensgat.mangalib.server.sites.Mangahome;
 import es.heavensgat.mangalib.server.sites.Mangakakalot;
+import es.heavensgat.mangalib.server.sites.Manganelo;
 import es.heavensgat.mangalib.server.util.MangaException;
 import es.heavensgat.mangalib.server.util.SiteInterface;
 import es.heavensgat.mangalib.server.util.SiteNotSupportedException;
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import sun.awt.image.ToolkitImage;
 
 import javax.imageio.ImageIO;
 
-import java.awt.Image;
+import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
 import java.beans.ExceptionListener;
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -47,6 +48,8 @@ public class MangaServiceImpl implements MangaService {
     private MangaRepository mangaRepository;
     @Autowired
     private Mangakakalot mangakakalot;
+    @Autowired
+    private Manganelo manganelo;
     @Autowired
     private Mangahome mangahome;
 
@@ -115,8 +118,10 @@ public class MangaServiceImpl implements MangaService {
     private SiteInterface getMangaSite(String url) {
         if (url.contains("mangahome")) {
             return mangahome;
-        } else if (url.contains("mangakakalot") || url.contains("manganelo")) {
+        } else if (url.contains("mangakakalot")) {
             return mangakakalot;
+        } else if (url.contains("manganelo")) {
+            return manganelo;
         } else {
             throw new SiteNotSupportedException("Provided manga website is not supported");
         }
@@ -228,7 +233,7 @@ public class MangaServiceImpl implements MangaService {
                         try {
                             String currentStatus = "\r--- Getting Images " + current.incrementAndGet() + "/" + max;
                             System.out.print(currentStatus);
-                            Image image = MangaServiceImpl.this.getImage(site, page, finalImagePath);
+                            java.awt.Image image = MangaServiceImpl.this.getImage(site, page, finalImagePath);
                             for (int i = 0; i < 3 && image == null; i++) {
                                 MangaServiceImpl.this.log("download image failed, retrying...");
                                 try {
@@ -258,7 +263,7 @@ public class MangaServiceImpl implements MangaService {
         }
     }
 
-    public Image getImage(SiteInterface site, Page page, String imagePath) {
+    public java.awt.Image getImage(SiteInterface site, Page page, String imagePath) {
         try {
             BufferedImage image = (BufferedImage) downloadImage(site.getImageUrl(page));
             File outputFile = new File(imagePath);
@@ -275,9 +280,15 @@ public class MangaServiceImpl implements MangaService {
         return null;
     }
 
+    public BufferedImage dropAlphaChannel(BufferedImage src) {
+        BufferedImage convertedImg = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_INT_RGB);
+        convertedImg.getGraphics().drawImage(src, 0, 0, null);
+
+        return convertedImg;
+    }
 
     @Override
-    public Image downloadImage(String url) throws IOException {
+    public java.awt.Image downloadImage(String url) throws IOException {
         final URL urlObj = new URL(url);
         final HttpURLConnection connection = (HttpURLConnection) urlObj
                 .openConnection();
@@ -286,7 +297,7 @@ public class MangaServiceImpl implements MangaService {
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.65 Safari/537.31");
         InputStream inputStream = connection.getInputStream();
         BufferedImage bufferedImage = ImageIO.read(inputStream);
-        return bufferedImage;
+        return dropAlphaChannel(bufferedImage);
     }
 
     @Override
