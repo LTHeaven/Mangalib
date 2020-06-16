@@ -1,18 +1,29 @@
 package es.heavensgat.mangalib.server.models;
 
+import javax.persistence.*;
+
+@Entity
+@Table(name = "Page")
 public class Page {
+    @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @ManyToOne(cascade = CascadeType.ALL)
     private Chapter parentChapter;
+    @Column(name = "page_number")
     private int pageNumber;
-    private String imageFilePath;
-//    private Image image;
+    @Enumerated(EnumType.STRING)
+    private PageStatus status;
+    @Column(name = "url")
     private String url;
 
-    public String getUrl() {
-        return url;
+    public Long getId() {
+        return id;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Chapter getParentChapter() {
@@ -31,21 +42,21 @@ public class Page {
         this.pageNumber = pageNumber;
     }
 
-    public String getImageFilePath() {
-        return imageFilePath;
+    public PageStatus getStatus() {
+        return status;
     }
 
-    public void setImageFilePath(String imageFilePath) {
-        this.imageFilePath = imageFilePath;
+    public void setStatus(PageStatus status) {
+        this.status = status;
     }
 
-    //    public Image getImage() {
-//        return image;
-//    }
-//
-//    public void setImage(Image image) {
-//        this.image = image;
-//    }
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
     @Override
     public String toString() {

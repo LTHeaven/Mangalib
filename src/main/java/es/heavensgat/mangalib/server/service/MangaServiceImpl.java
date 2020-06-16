@@ -39,7 +39,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MangaServiceImpl implements MangaService{
     public static long time = System.currentTimeMillis();
     public static int MAX_CHAPTERS = -1;
-//    public static String BASE_DIRECTORY = "C:/Users/bened_000/Pictures/Mangalib";
     public static String BASE_DIRECTORY = "/opt/tomcat";
     public static int CHAPTER_SPLIT_AMOUNT = 50;
 
@@ -72,14 +71,14 @@ public class MangaServiceImpl implements MangaService{
         }
         try{
             manga.setAdded(System.currentTimeMillis());
-            manga.setProgress(0);
+//            manga.setProgress(0);
             log("Getting base manga info", manga);
             manga = site.getBaseMangaInfo(url, manga);
 
             log("Getting chapter info", manga);
             List<Chapter> chapters = site.getChapters(manga);
             manga.setChapters(chapters);
-            manga.setChapterAmount(chapters.size());
+//            manga.setChapterAmount(chapters.size());
 
             log("Getting Images", manga);
             ExecutorService executorService = Executors.newFixedThreadPool(5);
@@ -98,7 +97,7 @@ public class MangaServiceImpl implements MangaService{
                 executorService.shutdown();
                 executorService.awaitTermination(5, TimeUnit.MINUTES);
                 if (manga.isError()) {
-                    throw new MangaException(manga.getStatus());
+//                    throw new MangaException(manga.getStatus());
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -161,7 +160,7 @@ public class MangaServiceImpl implements MangaService{
                     for (Chapter chapter : manga.getChapters().subList(i*CHAPTER_SPLIT_AMOUNT, lastChapter>manga.getChapters().size() ? manga.getChapters().size() : lastChapter)) {
                         addChapterCover(manga.getTitle(), chapter.getTitle(), document);
                         for (Page page : chapter.getPages()) {
-                            addImagePage(page.getImageFilePath(), document);
+//                            addImagePage(page.getImageFilePath(), document);
                         }
                     }
                 } catch (UnsupportedEncodingException e) {
@@ -185,7 +184,7 @@ public class MangaServiceImpl implements MangaService{
                 for (Chapter chapter : manga.getChapters()) {
                     addChapterCover(manga.getTitle(), chapter.getTitle(), document);
                     for (Page page : chapter.getPages()) {
-                        addImagePage(page.getImageFilePath(), document);
+//                        addImagePage(page.getImageFilePath(), document);
                     }
                 }
             } catch (UnsupportedEncodingException e) {
@@ -211,7 +210,7 @@ public class MangaServiceImpl implements MangaService{
             imagePath = imagePath.replace(' ', '_');
             try {
                 BufferedImage image = ImageIO.read(new File(imagePath));
-                page.setImageFilePath(imagePath);
+//                page.setImageFilePath(imagePath);
                 String currentStatus = "\r--- Getting Images " + current.incrementAndGet() + "/" + max;
                 System.out.print(currentStatus);
                 setProgress(manga, ((double)current.get())/max);
@@ -233,7 +232,7 @@ public class MangaServiceImpl implements MangaService{
                                 }
                                 image = MangaServiceImpl.this.getImage(site, page, finalImagePath);
                             }
-                            page.setImageFilePath(finalImagePath);
+//                            page.setImageFilePath(finalImagePath);
                             MangaServiceImpl.this.setProgress(manga, ((double) current.get()) / max);
                         } catch (MangaException ex) {
                             getListener().exceptionThrown(ex);
@@ -243,7 +242,7 @@ public class MangaServiceImpl implements MangaService{
                 runnable.setListener(new ExceptionListener() {
                     @Override
                     public void exceptionThrown(Exception e) {
-                        manga.setStatus(e.getMessage());
+//                        manga.setStatus(e.getMessage());
                         manga.setError(true);
                         executorService.shutdownNow();
                     }
@@ -298,7 +297,7 @@ public class MangaServiceImpl implements MangaService{
 
     private void log(String message, Manga manga) {
         if(manga != null) {
-            manga.setStatus(message);
+//            manga.setStatus(message);
             mangaRepository.save(manga);
         }
         log(message);
@@ -313,7 +312,7 @@ public class MangaServiceImpl implements MangaService{
 
     @Override
     public void setProgress(Manga manga, double progress){
-        manga.setProgress(progress);
+//        manga.setProgress(progress);
         mangaRepository.save(manga);
     }
 

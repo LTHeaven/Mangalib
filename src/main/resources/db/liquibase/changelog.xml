@@ -49,4 +49,36 @@
         </sql>
     </changeSet>
 
+    <changeSet id="5" author="bbender">
+        <delete tableName="Manga" />
+    </changeSet>
+
+    <changeSet id="6" author="bbender">
+        <createTable tableName="chapter">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="first_page_url" type="VARCHAR(255)"/>
+            <column name="manga_id" type="BIGINT" />
+        </createTable>
+        <createTable tableName="page">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="parent_chapter_id" type="BIGINT" />
+            <column name="page_number" type="INT"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="url" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="7" author="bbender">
+        <dropColumn tableName="Manga">
+            <column name="chapterAmount" />
+            <column name="status" />
+            <column name="progress" />
+        </dropColumn>
+    </changeSet>
+
 </databaseChangeLog>

@@ -10,10 +10,11 @@ import java.util.List;
 @Table(name = "Manga")
 public class Manga implements Comparable{
     @Id
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Transient
-    private List<Chapter> chapters = new ArrayList<Chapter>();
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "manga")
+    private List<Chapter> chapters = new ArrayList<>();
     @Column(name = "title")
     private String title;
     @Column(name = "author")
@@ -26,24 +27,11 @@ public class Manga implements Comparable{
     private String baseURL;
     @Column(name = "mangaFolderPath")
     private String mangaFolderPath;
-    @Column(name = "status")
-    private String status;
-    @Column(name = "progress")
-    private double progress;
     @Column(name = "added")
     private long added;
-    @Column(name = "chapterAmount")
-    private int chapterAmount;
     @Column(name = "error")
     private boolean error = false;
 
-    public int getChapterAmount() {
-        return chapterAmount;
-    }
-
-    public void setChapterAmount(int chapterAmount) {
-        this.chapterAmount = chapterAmount;
-    }
 
     public boolean isError() {
         return error;
@@ -61,13 +49,6 @@ public class Manga implements Comparable{
         this.added = added;
     }
 
-    public double getProgress() {
-        return progress;
-    }
-
-    public void setProgress(double progress) {
-        this.progress = progress;
-    }
 
     public Long getId() {
         return id;
@@ -77,13 +58,6 @@ public class Manga implements Comparable{
         this.id = id;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
 
     public String getMangaFolderPath() {
         return mangaFolderPath;
